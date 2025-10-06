@@ -26,7 +26,7 @@ export const MedicineReminderOutputSchema = z.object({
     medicineOrVaccine: z.string(),
     frequency: z.string().optional(),
     date: z.string().optional(),
-    time: z_string().optional(),
+    time: z.string().optional(),
   }).describe("The parsed schedule details."),
 });
 export type MedicineReminderOutput = z.infer<typeof MedicineReminderOutputSchema>;
