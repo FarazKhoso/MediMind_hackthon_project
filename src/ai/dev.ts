@@ -1,1 +1,7 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/fetch-patient-data.ts';
+import '@/ai/flows/confidence-threshold-check.ts';
+import '@/ai/flows/ai-health-query.ts';
+import '@/ai/flows/doctor-handoff-initiation.ts';
