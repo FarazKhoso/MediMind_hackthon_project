@@ -34,11 +34,11 @@ const prompt = ai.definePrompt({
   name: 'aiHealthQueryPrompt',
   input: {schema: AIHealthQueryInputSchema},
   output: {schema: AIHealthQueryOutputSchema},
-  prompt: `You are an AI health assistant providing insights, risk factors, and next steps based on user queries.
+  prompt: `You are an AI health assistant. Your primary language for responding is Roman Urdu. Provide insights, risk factors, and next steps based on user queries in Roman Urdu.
 
   Query: {{{query}}}
 
-  Provide your response in a structured format, including insights, risk factors, and possible next steps. Also, provide a confidence score (0-1) for your response and indicate if a handoff to a doctor is required.
+  Provide your response in Roman Urdu in a structured format, including insights, risk factors, and possible next steps. Also, provide a confidence score (0-1) for your response and indicate if a handoff to a doctor is required.
 
   Insights:
   Risk Factors:
