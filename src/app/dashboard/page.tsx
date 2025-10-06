@@ -7,23 +7,25 @@ import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, UserCheck, Clock, DollarSign, ShieldAlert } from 'lucide-react';
+import { Loader2, User, Clock, DollarSign, ShieldAlert, Star } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { useCollection } from '@/firebase/firestore/use-collection';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAppMode } from '@/hooks/use-app-mode';
+
 
 export default function ProviderDashboard() {
-  const { user, isUserLoading } = useUser();
+  const { user, isUserLoading, userProfile } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
+  const { mode } = useAppMode();
 
   // Query for booking requests, memoized for performance.
   const bookingsQuery = useMemoFirebase(() => {
-    // Only fetch bookings if the user is a logged-in (not anonymous) provider
     if (!firestore || !user || user.isAnonymous) return null;
     
-    // In a real app, you'd also query based on provider's service type and location
     return query(
         collection(firestore, 'bookings'),
         where('status', '==', 'requested')
@@ -54,8 +56,7 @@ export default function ProviderDashboard() {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
 
-  // If user is not logged in OR is an anonymous user, show access denied message.
-  if (!user || user.isAnonymous) {
+  if (!user || user.isAnonymous || userProfile?.role !== 'provider' || mode !== 'provider') {
     return (
         <div className="flex flex-col h-full">
             <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
@@ -67,7 +68,7 @@ export default function ProviderDashboard() {
                     <ShieldAlert className="h-4 w-4" />
                     <AlertTitle>Access Denied</AlertTitle>
                     <AlertDescription>
-                        This dashboard is for registered health providers only. Please <a href="/login" className="font-bold underline">log in</a> or <a href="/register" className="font-bold underline">register</a> to continue.
+                        This dashboard is for registered health providers only. Please <a href="/login" className="font-bold underline">log in</a> or switch to provider mode.
                     </AlertDescription>
                 </Alert>
             </main>
@@ -78,61 +79,58 @@ export default function ProviderDashboard() {
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
-        <h1 className="text-xl font-headline font-bold">Provider Dashboard</h1>
+        <h1 className="text-xl font-headline font-bold">New Booking Requests</h1>
         <SidebarTrigger />
       </header>
-      <main className="flex-1 overflow-y-auto p-4 md:p-8">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <h2 className="text-2xl font-headline font-semibold">New Booking Requests</h2>
-          {bookingsLoading && <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="animate-spin h-4 w-4" /><span>Loading requests...</span></div>}
+      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto space-y-4">
+          {bookingsLoading && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin h-6 w-6 text-primary" /></div>}
 
           {bookingRequests && bookingRequests.length === 0 && !bookingsLoading && (
-            <p className="text-muted-foreground">No new booking requests at the moment. We'll notify you when one comes in.</p>
+            <div className="text-center py-16">
+              <p className="text-muted-foreground">No new booking requests at the moment.</p>
+              <p className="text-sm text-muted-foreground/80">We'll notify you when one comes in.</p>
+            </div>
           )}
 
-          <div className="grid gap-6">
-            {bookingRequests?.map((booking) => (
-              <Card key={booking.id} className="shadow-md animate-in fade-in">
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-center">
-                    <span>{booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)} Request</span>
-                    <Badge variant="secondary">{booking.status}</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    A new request is available near you.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground"/>
-                        <span>Requested: {booking.timing}</span>
+          {bookingRequests?.map((booking) => (
+            <Card key={booking.id} className="shadow-md animate-in fade-in rounded-xl overflow-hidden">
+                <CardContent className="p-4 flex items-center gap-4">
+                    <Avatar className="h-14 w-14 border">
+                        <AvatarFallback><User size={32}/></AvatarFallback>
+                    </Avatar>
+                    <div className="flex-grow">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h3 className="font-headline font-semibold">{booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)} Request</h3>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-1">
+                                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400"/> 4.9
+                                    </div>
+                                    <span>&middot;</span>
+                                    <p>5 mins away</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xl font-bold text-primary">PKR {booking.bidPrice}</p>
+                                <Badge variant="secondary">{booking.timing}</Badge>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-2 mt-4">
+                            <Button 
+                                onClick={() => handleAccept(booking.id)}
+                                disabled={updatingId === booking.id}
+                                className="w-full bg-green-500 hover:bg-green-600"
+                            >
+                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
+                            </Button>
+                            <Button variant="ghost" className="w-full text-red-500 hover:bg-red-50 hover:text-red-600">Decline</Button>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-muted-foreground"/>
-                        <span>Bid: PKR {booking.bidPrice}</span>
-                    </div>
-                  </div>
-                   <div className="flex items-center gap-2">
-                        <UserCheck className="w-4 h-4 text-muted-foreground"/>
-                        <span>Customer ID: {booking.customerId.substring(0,8)}...</span>
-                    </div>
-                  <div className="flex gap-4 pt-4">
-                    <Button 
-                      onClick={() => handleAccept(booking.id)}
-                      disabled={updatingId === booking.id}
-                      className="w-full"
-                    >
-                      {updatingId === booking.id && <Loader2 className="mr-2 animate-spin"/>}
-                      Accept
-                    </Button>
-                    <Button variant="outline" className="w-full">Negotiate</Button>
-                    <Button variant="destructive" className="w-full">Reject</Button>
-                  </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
+            </Card>
+          ))}
         </div>
       </main>
     </div>
