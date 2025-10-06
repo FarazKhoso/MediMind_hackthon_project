@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -7,8 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import { MentalHealthChatbotInputSchema, MentalHealthChatbotOutputSchema, type MentalHealthChatbotInput, type MentalHealthChatbotOutput } from '@/app/actions';
+import { MentalHealthChatbotInputSchema, MentalHealthChatbotOutputSchema, type MentalHealthChatbotInput, type MentalHealthChatbotOutput } from '@/app/schemas';
 
 
 export async function mentalHealthChatbot(input: MentalHealthChatbotInput): Promise<MentalHealthChatbotOutput> {

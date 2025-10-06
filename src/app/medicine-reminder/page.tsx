@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setMedicineReminder } from '@/app/actions';
-import { MedicineReminderInputSchema, type MedicineReminderInput, type MedicineReminderOutput } from '@/app/actions';
+import { MedicineReminderInputSchema, type MedicineReminderInput, type MedicineReminderOutput } from '@/app/schemas';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -7,8 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import { HealthDataAnalysisInputSchema, HealthDataAnalysisOutputSchema, type HealthDataAnalysisInput, type HealthDataAnalysisOutput } from '@/app/actions';
+import { HealthDataAnalysisInputSchema, HealthDataAnalysisOutputSchema, type HealthDataAnalysisInput, type HealthDataAnalysisOutput } from '@/app/schemas';
 
 
 export async function healthDataAnalysis(input: HealthDataAnalysisInput): Promise<HealthDataAnalysisOutput> {

@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -7,8 +8,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-import { MedicineReminderInputSchema, MedicineReminderOutputSchema, type MedicineReminderInput, type MedicineReminderOutput } from '@/app/actions';
+import { MedicineReminderInputSchema, MedicineReminderOutputSchema, type MedicineReminderInput, type MedicineReminderOutput } from '@/app/schemas';
 
 export async function medicineReminder(input: MedicineReminderInput): Promise<MedicineReminderOutput> {
   return medicineReminderFlow(input);

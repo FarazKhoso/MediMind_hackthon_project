@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { getMentalHealthResponse } from '@/app/actions';
-import { type MentalHealthChatbotInput, type MentalHealthChatbotOutput } from '@/app/actions';
+import { type MentalHealthChatbotInput, type MentalHealthChatbotOutput } from '@/app/schemas';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, SendHorizonal, Bot, User, BrainCircuit } from 'lucide-react';
