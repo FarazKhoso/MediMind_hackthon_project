@@ -18,11 +18,15 @@ const prompt = ai.definePrompt({
   name: 'medicineReminderPrompt',
   input: {schema: MedicineReminderInputSchema},
   output: {schema: MedicineReminderOutputSchema},
-  prompt: `You are a reminder-setting AI assistant for a health app in Pakistan. Your job is to parse the user's request and create a schedule. Respond with a confirmation in Roman Urdu.
+  prompt: `You are a reminder-setting AI assistant for a health app in Pakistan. Your job is to parse the user's request (either text or an image of a prescription) and create a schedule. Respond with a confirmation in Roman Urdu.
 
   User Request: "{{{request}}}"
+  {{#if reportImage}}
+  Prescription Image: {{media url=reportImage}}
+  {{/if}}
   
-  Parse the medicine/vaccine name, frequency, date, and time.
+  Analyze the text request and/or the image to extract the medicine/vaccine name, frequency, date, and time.
+  If an image is provided, prioritize it for extracting details.
   Provide a confirmation message like: "Theek hai, aapke liye [Medicine/Vaccine Name] ki reminder set kar di gayi hai."
   `,
 });

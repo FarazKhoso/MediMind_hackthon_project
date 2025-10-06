@@ -7,14 +7,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { setMedicineReminder } from '@/app/actions';
 import { MedicineReminderInputSchema, type MedicineReminderInput, type MedicineReminderOutput } from '@/app/schemas';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, BellRing } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, BellRing, Upload } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 type FormData = MedicineReminderInput;
+
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 export default function MedicineReminderPage() {
   const [loading, setLoading] = useState(false);
@@ -24,6 +34,7 @@ export default function MedicineReminderPage() {
     resolver: zodResolver(MedicineReminderInputSchema),
     defaultValues: {
       request: "",
+      reportImage: undefined,
     },
   });
 
@@ -50,6 +61,7 @@ export default function MedicineReminderPage() {
           <Card>
             <CardHeader>
               <CardTitle>Set a New Reminder</CardTitle>
+              <CardDescription>Aap likh kar ya report upload karke reminder set kar sakte hain.</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
@@ -59,13 +71,39 @@ export default function MedicineReminderPage() {
                     name="request"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Reminder Request</FormLabel>
+                        <FormLabel>Reminder Request (Optional)</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="e.g., 'Set a reminder for Panadol every 6 hours' or 'Polio vaccine is due on 10/10/2025'"
                             className="min-h-[100px]"
                             {...field}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="reportImage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Upload Prescription (Optional)</FormLabel>
+                        <FormControl>
+                           <div className="flex items-center gap-2">
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              className="cursor-pointer"
+                              onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const dataUri = await fileToDataUri(file);
+                                  field.onChange(dataUri);
+                                }
+                              }}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

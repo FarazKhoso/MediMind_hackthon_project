@@ -17,6 +17,7 @@ export type HealthDataAnalysisOutput = z.infer<typeof HealthDataAnalysisOutputSc
 
 export const MedicineReminderInputSchema = z.object({
   request: z.string().describe("User's request for a reminder. e.g., 'Set a reminder for Panadol every 6 hours' or 'Polio vaccine is due on 10/10/2025'"),
+  reportImage: z.string().optional().describe("An optional image of a prescription or report, as a data URI."),
 });
 export type MedicineReminderInput = z.infer<typeof MedicineReminderInputSchema>;
 
