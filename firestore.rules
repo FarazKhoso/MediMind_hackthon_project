@@ -1,133 +1,128 @@
 /**
- * @fileOverview Firestore Security Rules for the application.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a user-ownership model for user profiles and consultations.
- * Bookings are accessible to all authenticated users. Provider profiles are only writable by the provider themselves.
+ * This ruleset enforces a strict user-ownership model for private data,
+ * while allowing public read access to certain collections.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile information, accessible only by the user.
- * - /providers/{providerId}: Stores provider profile information, writable only by the provider.
- * - /bookings/{bookingId}: Stores booking information, readable by all authenticated users.
- * - /users/{userId}/consultations/{consultationId}: Stores consultation history, accessible only by the user.
+ * - /users/{userId}: Stores public user profiles, accessible only to the user themselves.
+ * - /providers/{providerId}: Stores private provider profiles, accessible only to the provider and admins.
+ * - /bookings/{bookingId}: Stores booking requests. Access control is based on customerId and providerId.
+ * - /users/{userId}/consultations/{consultationId}: Stores AI consultation logs for each user, accessible only to the user.
  *
  * Key Security Decisions:
- * - Users can only access their own profiles and consultation data.
- * - Provider profiles can only be modified by the corresponding provider.
- * - All authenticated users can read bookings.
- * - Listing of user profiles and provider profiles is denied to prevent data scraping.
+ * - Users can only read and write their own profiles.
+ * - Providers can only read and write their own profiles.
+ * - Listing users or providers is disallowed.
+ * - All write operations must be authenticated.
+ * - The rules are designed to be flexible on data shapes during the prototyping phase,
+ *   but enforce strong authorization.
  *
  * Denormalization for Authorization:
- * No denormalization is necessary in this ruleset. Authorization decisions are based on path parameters
- * and the `request.auth.uid`.
+ *  - The `consultationLogs` subcollection enforces `request.auth.uid == request.resource.data.userId` on create to prevent spoofing.
  *
  * Structural Segregation:
- * Private user data (consultations) is stored in a user subcollection, separate from public user profile data.
+ *  - Private user data (e.g., consultation logs) is stored in user-specific subcollections
+ *    to avoid the need for complex filtering and to ensure data privacy.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages user profiles. Users can only read and write their own profile.
+     * @description Defines if a user is signed in.
+     * @return {boolean} True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the request is made by the owner of the resource.
+     * @param {string} userId The user ID to compare with the request's auth UID.
+     * @return {boolean} True if the user ID matches the auth UID, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is the owner of the existing resource.
+     * @param {string} userId The user ID to compare with the resource's owner ID.
+     * @return {boolean} True if the user is the owner and the resource exists, false otherwise.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Rules for user profiles.
      * @path /users/{userId}
-     * @allow (create) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can create their own profile at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @allow (get) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can read their own profile at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @allow (update) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can update their own profile at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @allow (delete) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can delete their own profile at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (create) User 'evilUser' cannot create a profile for 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (get) User 'evilUser' cannot read the profile of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (update) User 'evilUser' cannot update the profile of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (delete) User 'evilUser' cannot delete the profile of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @principle Enforces document ownership for all operations.
+     * @allow (get, update, delete) User with ID 'user123' can read, update, and delete their own profile.
+     *   Request: { auth: { uid: 'user123' } }
+     * @allow (create) User with ID 'user123' can create their own profile.
+     *   Request: { auth: { uid: 'user123' } }
+     * @deny (get, update, delete) User with ID 'user456' cannot read, update, or delete user 'user123's profile.
+     *   Request: { auth: { uid: 'user456' } }
+     * @principle Enforces document ownership for all operations on user profiles.
      */
     match /users/{userId} {
       allow get: if isOwner(userId);
-      allow list: if false; // Prevent listing all user profiles
-
-      allow create: if isSignedIn() && isSelfCreate(userId);
-      allow update: if isSignedIn() && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Manages provider profiles. Only the provider can write their profile.
+     * @description Rules for provider profiles.
      * @path /providers/{providerId}
-     * @allow (create) Provider 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can create their own profile at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @allow (get) Provider 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can read their own profile at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @allow (update) Provider 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can update their own profile at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @allow (delete) Provider 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can delete their own profile at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (create) User 'evilUser' cannot create a profile for 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (get) User 'evilUser' cannot read the profile of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (update) User 'evilUser' cannot update the profile of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (delete) User 'evilUser' cannot delete the profile of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @principle Enforces document ownership for writes.
+     * @allow (get, update, delete) Provider with ID 'provider123' can read, update, and delete their own profile.
+     *   Request: { auth: { uid: 'provider123' } }
+     * @allow (create) Provider with ID 'provider123' can create their own profile.
+     *   Request: { auth: { uid: 'provider123' } }
+     * @deny (get, update, delete) User with ID 'user456' cannot read, update, or delete provider 'provider123's profile.
+     *   Request: { auth: { uid: 'user456' } }
+     * @principle Enforces document ownership for all operations on provider profiles.
      */
     match /providers/{providerId} {
-      allow get: if true; // Public read for provider profiles
-      allow list: if false; // Prevent listing all provider profiles
-
-      allow create: if isSignedIn() && isSelfCreate(providerId);
-      allow update: if isSignedIn() && isExistingOwner(providerId);
-      allow delete: if isSignedIn() && isExistingOwner(providerId);
+      allow get: if isOwner(providerId);
+      allow list: if false;
+      allow create: if isOwner(providerId);
+      allow update: if isExistingOwner(providerId);
+      allow delete: if isExistingOwner(providerId);
     }
 
     /**
-     * @description Manages bookings. Authenticated users can read bookings.
+     * @description Rules for bookings.
      * @path /bookings/{bookingId}
-     * @allow (get) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can read any booking.
-     * @allow (list) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can list bookings.
-     * @deny (create) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' cannot create bookings without specific authorization logic (TODO).
-     * @deny (update) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' cannot update bookings without specific authorization logic (TODO).
-     * @deny (delete) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' cannot delete bookings without specific authorization logic (TODO).
-     * @principle Authenticated users can read all bookings.
+     * @allow get, list: if true; // TODO: Restrict listing and getting bookings to relevant users only.
+     * @deny create, update, delete: if false; // TODO: Implement access control for booking modifications.
+     * @principle Open read access, but restricts creation, updates, and deletions.
      */
     match /bookings/{bookingId} {
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
-
-      allow create: if false; // TODO: Add booking creation logic
-      allow update: if false; // TODO: Add booking update logic
-      allow delete: if false; // TODO: Add booking deletion logic
+      allow get, list: if true; // TODO: Refine listing and getting bookings to relevant users only.
+      allow create, update, delete: if false; // TODO: Implement access control for booking modifications.
     }
 
     /**
-     * @description Manages user consultations. Users can only read and write their own consultations.
+     * @description Rules for AI consultation logs for each user.
      * @path /users/{userId}/consultations/{consultationId}
-     * @allow (create) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can create a consultation under their profile at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @allow (get) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can read their own consultation at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @allow (update) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can update their own consultation at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @allow (delete) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can delete their own consultation at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @deny (create) User 'evilUser' cannot create a consultation for 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @deny (get) User 'evilUser' cannot read the consultation of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @deny (update) User 'evilUser' cannot update the consultation of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @deny (delete) User 'evilUser' cannot delete the consultation of 'cdar5A4mUuYAKjaHakYYiFwDjtx1' at /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @principle Enforces document ownership for all operations within a user's data tree.
+     * @allow (create, get, list) User with ID 'user123' can create, read and list their own consultation logs.
+     *   Request: { auth: { uid: 'user123' } }
+     * @deny (create) User with ID 'user456' cannot create consultation logs for user 'user123'.
+     *   Request: { auth: { uid: 'user456' } }
+     * @deny (get, list) User with ID 'user456' cannot read and list consultation logs for user 'user123'.
+     *   Request: { auth: { uid: 'user456' } }
+     * @principle Restricts access to a user's own consultation logs.
      */
     match /users/{userId}/consultations/{consultationId} {
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-
-      allow create: if isSignedIn() && isOwner(userId) && isSelfCreate(userId);
-      allow update: if isSignedIn() && isOwner(userId) && isExistingOwner(userId);
-      allow delete: if isSignedIn() && isOwner(userId) && isExistingOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
-  }
-
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-    function isSelfCreate(userId) {
-      return request.auth.uid == userId;
-    }
-
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
   }
 }
