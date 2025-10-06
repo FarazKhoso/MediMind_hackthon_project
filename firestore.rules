@@ -1,0 +1,83 @@
+/**
+ * @fileOverview
+ * This ruleset enforces a strict user-ownership model for MediMind AI application data.
+ *
+ * Data Structure:
+ * - User profiles are stored under `/users/{userId}`.
+ * - Consultation logs are stored as subcollections under each user: `/users/{userId}/consultationLogs/{logId}`.
+ * - Doctor profiles are stored under `/doctors/{doctorId}`.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own profile data and consultation logs.
+ * - Listing all users is disallowed.
+ * - Doctor access control is based on undefined administrative roles (requires further implementation).
+ *
+ * Denormalization for Authorization:
+ * - The `ConsultationLog` entity includes a `userId` field, denormalizing the user-ownership to avoid `get()` calls during authorization.
+ *
+ * Structural Segregation:
+ * - User-specific data (profiles and logs) are stored under `/users/{userId}`, ensuring private access.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Controls access to user profile data. Only the authenticated user can read and write their own profile.
+     * @path /users/{userId}
+     * @allow (create) - Authenticated user with UID 'user_abc' can create their own profile at /users/user_abc with matching id.
+     * @allow (get, update, delete) - Authenticated user with UID 'user_abc' can read, update, and delete their own profile at /users/user_abc.
+     * @deny (create) - Authenticated user with UID 'user_abc' cannot create a profile at /users/user_xyz.
+     * @deny (get, update, delete) - Authenticated user with UID 'user_abc' cannot read, update, or delete a profile at /users/user_xyz.
+     * @principle Enforces document ownership for all operations on user profiles.  Validates the resource `id` on create.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to consultation logs for each user. Only the authenticated user can read and write their own logs.
+     * @path /users/{userId}/consultationLogs/{logId}
+     * @allow (create) - Authenticated user with UID 'user_abc' can create a log under /users/user_abc/consultationLogs/log_123 with userId: 'user_abc'.
+     * @allow (get, list, update, delete) - Authenticated user with UID 'user_abc' can read, list, update, and delete logs under /users/user_abc/consultationLogs/{logId}.
+     * @deny (create) - Authenticated user with UID 'user_abc' cannot create a log under /users/user_xyz/consultationLogs/log_123.
+     * @deny (get, list, update, delete) - Authenticated user with UID 'user_abc' cannot read, list, update, or delete logs under /users/user_xyz/consultationLogs/{logId}.
+     * @principle Enforces document ownership for all operations on consultation logs.  Validates the resource `userId` on create.
+     */
+    match /users/{userId}/consultationLogs/{logId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to doctor profile data. Access is currently open but should be restricted to administrative roles in the future.
+     * @path /doctors/{doctorId}
+     * @allow (get, list) - Any user can read doctor profiles.
+     * @allow (create, update, delete) - No one can create, update or delete doctor profiles.  TODO: Implement admin role based access.
+     * @principle Restricts access to doctor data to authenticated users with a specific administrative role (not yet implemented).
+     */
+    match /doctors/{doctorId} {
+      allow get, list: if true;
+      allow create, update, delete: if false; // TODO: Add admin role validation once roles are defined.
+    }
+  }
+}

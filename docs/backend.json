@@ -1,0 +1,169 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the MediMind AI application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "ConsultationLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ConsultationLog",
+      "type": "object",
+      "description": "Represents a log of a consultation between a user and the AI, including the AI's response and confidence score.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the consultation log entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ConsultationLog)"
+        },
+        "query": {
+          "type": "string",
+          "description": "The user's health-related query."
+        },
+        "aiResponse": {
+          "type": "string",
+          "description": "The AI's response to the user's query."
+        },
+        "confidenceScore": {
+          "type": "number",
+          "description": "The AI's confidence score for its response (0-1)."
+        },
+        "handoffRequested": {
+          "type": "boolean",
+          "description": "Indicates whether a handoff to a doctor was requested."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the consultation occurred.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "query",
+        "aiResponse",
+        "confidenceScore",
+        "handoffRequested",
+        "timestamp"
+      ]
+    },
+    "Doctor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Doctor",
+      "type": "object",
+      "description": "Represents a medical doctor who can be handed off to by the AI.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the doctor entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The doctor's full name."
+        },
+        "specialty": {
+          "type": "string",
+          "description": "The doctor's medical specialty."
+        },
+        "fcmToken": {
+          "type": "string",
+          "description": "The doctor's FCM token for receiving handoff requests."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "specialty",
+        "fcmToken"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile data.  Access is restricted to the user themselves.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/consultationLogs/{logId}",
+        "definition": {
+          "entityName": "ConsultationLog",
+          "schema": {
+            "$ref": "#/backend/entities/ConsultationLog"
+          },
+          "description": "Stores consultation logs for each user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "logId",
+              "description": "The unique identifier of the consultation log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/doctors/{doctorId}",
+        "definition": {
+          "entityName": "Doctor",
+          "schema": {
+            "$ref": "#/backend/entities/Doctor"
+          },
+          "description": "Stores doctor profile data. Access controlled based on administrative roles (not defined in detail here).",
+          "params": [
+            {
+              "name": "doctorId",
+              "description": "The unique identifier of the doctor."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, DBAC, and QAPs. User data is stored under `/users/{userId}` to establish clear ownership. Consultation logs are stored as subcollections under each user (`/users/{userId}/consultationLogs/{logId}`) to maintain the 1:N relationship and enforce ownership. This structure avoids `get()` calls in security rules because access control is based on path ownership (`request.auth.uid == userId`). Doctor data is stored in a separate collection `/doctors/{doctorId}`.  This design enables secure `list` operations for consultation logs (QAPs) because each user can only access their own logs. The denormalization strategy copies user ID into consultation logs, removing the need to fetch parent user data. The use of path-based ownership (`/users/{userId}/...`) naturally supports private data access. No custom claims are needed because authorization relies on `request.auth.uid` and path ownership."
+  }
+}
