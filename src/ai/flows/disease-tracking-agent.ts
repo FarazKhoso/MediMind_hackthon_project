@@ -44,12 +44,10 @@ const prompt = ai.definePrompt({
   {{/each}}
 
   Based on this data, provide:
-  1.  A prediction about the risk of an outbreak.
+  1.  A prediction about the risk of an outbreak in Roman Urdu.
   2.  A list of hotspot locations.
-  3.  A confidence score for your prediction.
+  3.  A confidence score for your prediction (between 0 and 1).
   4.  Recommendations for health departments in Roman Urdu.
-
-  Include this disclaimer in your final output, separately: 'Yeh AI se bana hai. Doctor se salah lain. Yeh medical salah nahi hai.'
   `,
 });
 
@@ -61,11 +59,17 @@ const diseaseTrackingAgentFlow = ai.defineFlow(
   },
   async (input) => {
     const {output} = await prompt(input);
-    if(output) {
-      if (output.confidenceScore < 0.95) {
-        output.prediction = `Low confidence prediction: ${output.prediction}. Please verify with more data.`;
-      }
+    if (!output) {
+      throw new Error("Could not get a response from the AI.");
     }
-    return output!;
+    
+    if (output.confidenceScore < 0.95) {
+      output.prediction = `Low confidence prediction: ${output.prediction}. Please verify with more data.`;
+    }
+    
+    // The disclaimer is now part of the UI, but we can still enforce it here if needed.
+    // output.recommendations += ' Disclaimer: Yeh AI se bana hai. Doctor se salah lain. Yeh medical salah nahi hai.';
+
+    return output;
   }
 );
