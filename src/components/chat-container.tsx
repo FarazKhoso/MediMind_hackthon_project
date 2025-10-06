@@ -1,6 +1,8 @@
 'use client'
 
 import { getAIResponse } from "@/app/actions";
+import { useUser, useFirestore, useAuth } from "@/firebase";
+import { logConsultation } from "@/services/consultation-history";
 import type { ChatMessage } from "@/lib/types";
 import { SendHorizonal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -8,12 +10,24 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { EmptyChat } from "./empty-chat";
 import { ChatMessageComponent, LoadingMessage } from "./chat-message";
+import { signInAnonymously } from "firebase/auth";
 
 export function ChatContainer() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const auth = useAuth();
+
+  // Sign in user anonymously on component mount
+  useEffect(() => {
+    if (!user && !isUserLoading) {
+      signInAnonymously(auth);
+    }
+  }, [user, isUserLoading, auth]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -23,6 +37,12 @@ export function ChatContainer() {
     e?.preventDefault();
     const userQuery = query || input;
     if (!userQuery.trim()) return;
+
+    if (!user) {
+        console.error("User not authenticated, cannot proceed.");
+        // Optionally show a toast message to the user
+        return;
+    }
 
     setIsLoading(true);
     setInput("");
@@ -34,7 +54,17 @@ export function ChatContainer() {
     };
     setMessages(prev => [...prev, userMessage]);
 
-    const aiResponse = await getAIResponse(userQuery);
+    // Now getAIResponse is called with the userId.
+    const aiResponse = await getAIResponse(user.uid, userQuery);
+
+    // The client-side logging is no longer needed here as it's handled on the server action.
+    // logConsultation(firestore, {
+    //   userId: user.uid,
+    //   userQuery: userQuery,
+    //   aiResponse: aiResponse.insights,
+    //   confidenceScore: aiResponse.confidenceScore,
+    //   handoffStatus: aiResponse.handoffRequired ? "pending" : "not_required",
+    // });
 
     const aiMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
@@ -89,9 +119,9 @@ export function ChatContainer() {
                 handleSubmit();
               }
             }}
-            disabled={isLoading}
+            disabled={isLoading || isUserLoading}
           />
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+          <Button type="submit" size="icon" disabled={isLoading || isUserLoading || !input.trim()}>
             <SendHorizonal />
             <span className="sr-only">Send</span>
           </Button>

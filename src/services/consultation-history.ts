@@ -1,22 +1,52 @@
+'use client';
 
-// This is a placeholder for the actual service that would interact with Firestore.
-// For now, it just logs to the console.
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  Firestore,
+} from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { useFirestore } from '@/firebase';
 
 interface ConsultationLog {
-    userQuery: string;
-    aiResponse: string;
-    confidenceScore: number;
-    handoffStatus: 'pending' | 'completed' | 'not_required';
-    timestamp?: Date;
+  userId: string;
+  userQuery: string;
+  aiResponse: string;
+  confidenceScore: number;
+  handoffStatus: 'pending' | 'completed' | 'not_required';
+  timestamp?: any;
 }
 
 /**
  * Logs a consultation to the database.
+ * This is a non-blocking operation.
+ * @param db The Firestore instance.
  * @param log The consultation log to save.
  */
-export async function logConsultation(log: ConsultationLog): Promise<void> {
-    // In a real application, this would write to Firestore.
-    // e.g., await addDoc(collection(db, 'consultations'), { ...log, timestamp: serverTimestamp() });
-    console.log("Logging consultation:", { ...log, timestamp: new Date() });
-    return Promise.resolve();
+export function logConsultation(db: Firestore, log: ConsultationLog) {
+  if (!log.userId) {
+    console.warn("Cannot log consultation without a user ID.");
+    return;
+  }
+  
+  const logWithTimestamp = {
+    ...log,
+    timestamp: serverTimestamp(),
+  };
+
+  const collectionRef = collection(db, 'users', log.userId, 'consultationLogs');
+  
+  addDoc(collectionRef, logWithTimestamp)
+    .catch(error => {
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: collectionRef.path,
+          operation: 'create',
+          requestResourceData: logWithTimestamp,
+        })
+      )
+    });
 }
