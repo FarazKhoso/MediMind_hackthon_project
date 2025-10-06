@@ -2,109 +2,127 @@
  * @fileoverview Firestore Security Rules for Prototyping.
  *
  * Core Philosophy:
- * This ruleset prioritizes strong authorization based on user identity and
- * relationships (ownership and roles), while relaxing data validation to
- * enable rapid prototyping and iteration. Schema validation is minimized.
+ * This ruleset prioritizes strong authorization based on user identity and roles,
+ * while maintaining flexible data schemas for rapid iteration. It enforces strict
+ * access control, especially for write operations, but avoids overly strict
+ * schema validation during this prototyping phase. The design uses data
+ * denormalization to optimize rule performance and security.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the owning user.
- * - /providers/{providerId}: Provider profiles, accessible only to the owning provider.
- * - /bookings/{bookingId}: Booking data, accessible to involved customer and provider.
- * - /users/{userId}/consultations/{consultationId}: AI consultations, accessible only to the owning user.
+ * - /users/{userId}: Stores public user profiles, accessible only to the owning user.
+ * - /providers/{providerId}: Stores private provider profiles, accessible only to the provider themselves.
+ * - /bookings/{bookingId}: Stores booking data, accessible to relevant customers and providers.
+ * - /users/{userId}/consultations/{consultationId}: Stores user-specific AI consultation history, accessible only to the owning user.
  *
  * Key Security Decisions:
- * - Strict user-ownership for /users/{userId} and /users/{userId}/consultations/{consultationId}.
- * - Providers can only manage their own provider profiles.
- * - No listing of users or providers is allowed to prevent data scraping.
- * - The ruleset avoids complex data validation in favor of rapid iteration.
+ * - Strict user ownership is enforced for user profiles and consultations.
+ * - Provider profiles are restricted to the provider.
+ * - List operations are generally allowed for owner-specific subcollections.
  *
  * Denormalization for Authorization:
- *  The rules leverage path-based authorization (e.g., /users/{userId}) to avoid the need for
- *  expensive `get()` operations.
+ *   The rules assume that documents contain the necessary fields (e.g., userId, providerId)
+ *   to make authorization decisions without requiring additional `get()` calls.
+ *
+ * Structural Segregation:
+ *   Private user data (e.g., consultations) is stored in user-specific subcollections
+ *   to avoid mixing public and private data in the same collection, simplifying list operations.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Secure user profiles. Only the owning user can read and write their profile.
+     * @description Secures user profiles, allowing only the owner to read and write their own profile.
      * @path /users/{userId}
-     * @allow (create, update, get, delete) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can create, update, get, or delete /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (create, update, get, delete) User 'evilHacker' cannot create, update, get, or delete /users/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @principle Enforces document ownership for writes.
+     * @allow (create, update, get, delete) if the authenticated user's UID matches the userId.
+     * @deny (create, update, delete) if the authenticated user's UID does not match the userId.
+     * @principle Enforces document ownership for user profiles.
      */
     match /users/{userId} {
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      function isSignedIn() {
+        return request.auth != null;
       }
 
-      allow get: if isOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isSignedIn() && isOwner(userId) && resource.data.id == userId;
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Secure provider profiles. Only the owning provider can read and write their profile.
+     * @description Secures provider profiles, allowing only the provider to read and write their own profile.
      * @path /providers/{providerId}
-     * @allow (create, update, get, delete) Provider 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can create, update, get, or delete /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @deny (create, update, get, delete) User 'evilHacker' cannot create, update, get, or delete /providers/cdar5A4mUuYAKjaHakYYiFwDjtx1.
-     * @principle Enforces document ownership for writes.
+     * @allow (create, update, get, delete) if the authenticated user's UID matches the providerId.
+     * @deny (create, update, delete) if the authenticated user's UID does not match the providerId.
+     * @principle Enforces document ownership for provider profiles.
      */
     match /providers/{providerId} {
       function isOwner(providerId) {
         return request.auth.uid == providerId;
       }
-
-      function isExistingOwner(providerId) {
-        return isOwner(providerId) && resource != null;
+      function isSignedIn() {
+        return request.auth != null;
       }
 
-      allow get: if isOwner(providerId);
+      allow get: if isSignedIn() && isOwner(providerId);
       allow list: if false;
-      allow create: if isOwner(providerId);
-      allow update: if isExistingOwner(providerId);
-      allow delete: if isExistingOwner(providerId);
+      allow create: if isSignedIn() && isOwner(providerId) && request.resource.data.id == providerId;
+      allow update: if isSignedIn() && isOwner(providerId) && resource.data.id == providerId;
+      allow delete: if isSignedIn() && isOwner(providerId);
     }
 
     /**
-     * @description Secure bookings. Only the customer or provider involved in the booking can read and write it.
+     * @description Secures booking data, allowing access to relevant customers and providers.
      * @path /bookings/{bookingId}
+     * @allow (get, list) if true for public access, should be updated to allow only involved users to read.
+     * @deny (create, update, delete) Always denied without authentication.
+     * @principle Requires authentication for any booking modifications.
      */
     match /bookings/{bookingId} {
-        allow get: if true;
-        allow list: if true;
-        allow create: if true;
-        allow update: if true;
-        allow delete: if false; // TODO: Owner or admin role check if deleting a booking is allowed.
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      // Public read access for prototyping
+      allow get: if isSignedIn();
+      allow list: if isSignedIn(); // TODO: Secure listing to only participants
+      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+
+        match /messages/{messageId}{
+          allow list: if false; // TODO: Secure listing to only participants
+          allow get: if false; // TODO: Secure listing to only participants
+          allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+          allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+          allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+        }
     }
 
     /**
-     * @description Secure AI consultations. Only the owning user can read and write their consultations.
+     * @description Secures AI consultations, allowing only the owner to read and write their own consultations.
      * @path /users/{userId}/consultations/{consultationId}
-     * @allow (create, update, get, delete) User 'cdar5A4mUuYAKjaHakYYiFwDjtx1' can create, update, get, or delete /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @deny (create, update, get, delete) User 'evilHacker' cannot create, update, get, or delete /users/cdar5A4mUuYAKjaHakYYiFwDjtx1/consultations/someConsultationId.
-     * @principle Enforces document ownership for writes.
+     * @allow (create, update, get, delete) if the authenticated user's UID matches the userId.
+     * @deny (create, update, delete) if the authenticated user's UID does not match the userId.
+     * @principle Enforces document ownership for consultations.
      */
     match /users/{userId}/consultations/{consultationId} {
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
-
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      function isSignedIn() {
+        return request.auth != null;
       }
 
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isSignedIn() && isOwner(userId) && resource.data.userId == userId;
+      allow delete: if isSignedIn() && isOwner(userId);
     }
   }
 }
