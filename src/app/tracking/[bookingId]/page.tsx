@@ -2,8 +2,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useFirestore, useDoc } from '@/firebase';
-import { doc, updateDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import { doc, updateDoc, collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -37,18 +37,24 @@ export default function TrackingPage() {
     const firestore = useFirestore();
     const [newMessage, setNewMessage] = useState('');
 
-    const bookingRef = doc(firestore, 'bookings', bookingId as string);
+    const bookingRef = useMemoFirebase(() => {
+        if (!firestore || !bookingId) return null;
+        return doc(firestore, 'bookings', bookingId as string);
+    }, [firestore, bookingId]);
     const { data: booking, isLoading: bookingLoading } = useDoc(bookingRef);
 
-    const chatQuery = collection(firestore, 'bookings', bookingId as string, 'messages');
+    const chatQuery = useMemoFirebase(() => {
+        if (!firestore || !bookingId) return null;
+        return query(collection(firestore, 'bookings', bookingId as string, 'messages'), orderBy('createdAt', 'asc'));
+    }, [firestore, bookingId]);
     const { data: messages, isLoading: messagesLoading } = useCollection(chatQuery);
 
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim()) return;
+        if (!newMessage.trim() || !chatQuery) return;
 
-        await addDoc(chatQuery, {
+        await addDoc(chatQuery.withConverter(null), { // Use withConverter(null) to get base collection ref for addDoc
             text: newMessage,
             sender: 'customer', // In a real app, you'd check user role
             createdAt: serverTimestamp(),
@@ -58,6 +64,7 @@ export default function TrackingPage() {
     };
 
     const handleCompleteBooking = async () => {
+        if (!bookingRef) return;
         await updateDoc(bookingRef, { status: 'completed' });
     };
 
