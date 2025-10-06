@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { useCollection } from '@/firebase';
+import { useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
 
 // Mock map component for tracking
 const TrackingMap = () => (
@@ -43,24 +43,42 @@ export default function TrackingPage() {
     }, [firestore, bookingId]);
     const { data: booking, isLoading: bookingLoading } = useDoc(bookingRef);
 
-    const chatQuery = useMemoFirebase(() => {
+    const chatCollectionRef = useMemoFirebase(() => {
         if (!firestore || !bookingId) return null;
-        return query(collection(firestore, 'bookings', bookingId as string, 'messages'), orderBy('createdAt', 'asc'));
+        return collection(firestore, 'bookings', bookingId as string, 'messages');
     }, [firestore, bookingId]);
+
+    const chatQuery = useMemoFirebase(() => {
+        if (!chatCollectionRef) return null;
+        return query(chatCollectionRef, orderBy('createdAt', 'asc'));
+    }, [chatCollectionRef]);
+    
     const { data: messages, isLoading: messagesLoading } = useCollection(chatQuery);
 
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !chatQuery) return;
+        if (!newMessage.trim() || !chatCollectionRef) return;
 
-        await addDoc(chatQuery.withConverter(null), { // Use withConverter(null) to get base collection ref for addDoc
+        const messageData = {
             text: newMessage,
             sender: 'customer', // In a real app, you'd check user role
             createdAt: serverTimestamp(),
-        });
+        };
 
         setNewMessage('');
+
+        addDoc(chatCollectionRef, messageData)
+            .catch(error => {
+              errorEmitter.emit(
+                'permission-error',
+                new FirestorePermissionError({
+                  path: chatCollectionRef.path,
+                  operation: 'create',
+                  requestResourceData: messageData,
+                })
+              )
+            });
     };
 
     const handleCompleteBooking = async () => {
