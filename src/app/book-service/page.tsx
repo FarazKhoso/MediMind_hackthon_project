@@ -34,13 +34,18 @@ import { useAuth, useFirestore, useUser } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader2, MapPin, Clock, DollarSign } from 'lucide-react';
+import { Loader2, MapPin, Clock, DollarSign, Stethoscope, User, Syringe } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+
 
 // Mock map component
 const MapPreview = () => (
     <div className="h-64 bg-muted rounded-md flex items-center justify-center">
-        <p className="text-muted-foreground">Map Preview Placeholder</p>
+         <div className="text-center text-muted-foreground">
+            <MapPin className="mx-auto h-12 w-12" />
+            <p>Map Preview Placeholder</p>
+        </div>
     </div>
 );
 
@@ -53,6 +58,12 @@ const bookingSchema = z.object({
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
+const serviceTypes = [
+    { value: 'doctor', label: 'Doctor', icon: Stethoscope },
+    { value: 'nurse', label: 'Nurse', icon: User },
+    { value: 'compounder', label: 'Compounder', icon: Syringe },
+]
+
 export default function BookServicePage() {
   const [loading, setLoading] = useState(false);
   const firestore = useFirestore();
@@ -64,7 +75,7 @@ export default function BookServicePage() {
     resolver: zodResolver(bookingSchema),
     defaultValues: {
       serviceType: 'doctor',
-      location: 'My Current Location', // Mock
+      location: '', // User must enter location
       timing: 'now',
       bidPrice: 1000,
     },
@@ -87,6 +98,7 @@ export default function BookServicePage() {
     try {
       const docRef = await addDoc(collection(firestore, 'bookings'), {
         customerId: user.uid,
+        // In a real app, we'd add customer details here like name, rating etc.
         ...data,
         status: 'requested',
         createdAt: serverTimestamp(),
@@ -109,120 +121,103 @@ export default function BookServicePage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
          <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
             <h1 className="text-xl font-headline font-bold">Book a Home Service</h1>
             <SidebarTrigger />
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
-            <div className="max-w-2xl mx-auto">
-                <Card className="shadow-lg animate-in fade-in">
-                    <CardHeader>
-                        <CardTitle className="text-2xl font-headline">Find a Provider</CardTitle>
-                        <CardDescription>
-                            Select a service, set your location, and make a bid.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                            <FormField
-                                control={form.control}
-                                name="serviceType"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Service Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a service" />
-                                        </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="doctor">Doctor</SelectItem>
-                                            <SelectItem value="nurse">Nurse</SelectItem>
-                                            <SelectItem value="compounder">Compounder</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="location"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="flex items-center gap-2"><MapPin/> Location</FormLabel>
-                                    <FormControl>
-                                        <div>
-                                            <MapPreview />
-                                            <Input className="mt-2" placeholder="e.g., Block 13, Gulistan-e-Jauhar, Karachi" {...field} />
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="timing"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel className="flex items-center gap-2"><Clock/> Timing</FormLabel>
-                                    <Select onValuecha
-nge={field.onChange} defaultValue={field.value}>
-                                        <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select timing" />
-                                        </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            <SelectItem value="now">Immediately</SelectItem>
-                                            <SelectItem value="1hr">Within 1 Hour</SelectItem>
-                                            <SelectItem value="2hr">Within 2 Hours</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="bidPrice"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel className="flex items-center justify-between">
-                                            <span className="flex items-center gap-2"><DollarSign/> Your Bid (PKR)</span>
-                                            <span className="font-bold text-lg text-primary">PKR {field.value}</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Slider
-                                                min={300}
-                                                max={5000}
-                                                step={50}
-                                                value={[field.value]}
-                                                onValueChange={(values) => field.onChange(values[0])}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+        <main className="flex-1 overflow-y-auto">
+            <div className="relative">
+                <div className="h-64 md:h-80">
+                    <div className="h-full bg-muted flex items-center justify-center">
+                        <div className="text-center text-muted-foreground">
+                            <MapPin className="mx-auto h-12 w-12" />
+                            <p>Map Preview Placeholder</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:relative md:p-0">
+                    <Card className="shadow-lg animate-in fade-in md:shadow-none md:rounded-none md:border-0 -mb-16">
+                        <CardContent className="p-4 md:p-6">
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                                <FormField
+                                    control={form.control}
+                                    name="serviceType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {serviceTypes.map((service) => (
+                                                    <Button
+                                                        key={service.value}
+                                                        type="button"
+                                                        variant={field.value === service.value ? 'default' : 'outline'}
+                                                        className="h-auto flex-col gap-1 py-3"
+                                                        onClick={() => field.onChange(service.value)}
+                                                    >
+                                                        <service.icon className="h-6 w-6 mb-1"/>
+                                                        <span>{service.label}</span>
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                
+                                <div className="space-y-4">
+                                     <FormField
+                                        control={form.control}
+                                        name="location"
+                                        render={({ field }) => (
+                                        <FormItem>
+                                            <FormControl>
+                                                <div className="relative">
+                                                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                                     <Input className="pl-10" placeholder="Enter your full address" {...field} />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="bidPrice"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormControl>
+                                                    <div className="relative">
+                                                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                                                         <Input 
+                                                            type="number" 
+                                                            className="pl-10 font-bold" 
+                                                            placeholder="Offer your fare"
+                                                            value={field.value}
+                                                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                                         />
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
 
-                            <Button type="submit" className="w-full" disabled={loading || isUserLoading}>
-                                {loading ? <Loader2 className="mr-2 animate-spin" /> : null}
-                                Find and Request Provider
-                            </Button>
-                        </form>
-                    </Form>
-                    </CardContent>
-                </Card>
+                                <Button type="submit" size="lg" className="w-full font-bold" disabled={loading || isUserLoading}>
+                                    {loading ? <Loader2 className="mr-2 animate-spin" /> : null}
+                                    Find a Provider
+                                </Button>
+                            </form>
+                        </Form>
+                        </CardContent>
+                    </Card>
+                </div>
+
             </div>
+
         </main>
     </div>
   );
