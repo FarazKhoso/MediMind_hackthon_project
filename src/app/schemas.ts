@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const HealthDataAnalysisInputSchema = z.object({
   bloodPressure: z.string().optional().describe("User's blood pressure reading (e.g., '150/90')."),
   bloodSugar: z.string().optional().describe("User's blood sugar level (e.g., '120 mg/dL')."),
-  heartRate: z.number().optional().describe("User's heart rate (e.g., 95)."),
+  heartRate: z.union([z.number(), z.string()]).optional().describe("User's heart rate (e.g., 95)."),
 });
 export type HealthDataAnalysisInput = z.infer<typeof HealthDataAnalysisInputSchema>;
 
@@ -26,7 +26,7 @@ export const MedicineReminderOutputSchema = z.object({
     medicineOrVaccine: z.string(),
     frequency: z.string().optional(),
     date: z.string().optional(),
-    time: z.string().optional(),
+    time: z_string().optional(),
   }).describe("The parsed schedule details."),
 });
 export type MedicineReminderOutput = z.infer<typeof MedicineReminderOutputSchema>;

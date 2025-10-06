@@ -25,7 +25,7 @@ export default function HealthAnalysisPage() {
     defaultValues: {
       bloodPressure: "",
       bloodSugar: "",
-      heartRate: undefined,
+      heartRate: '' as any,
     },
   });
 
@@ -89,7 +89,7 @@ export default function HealthAnalysisPage() {
                       <FormItem>
                         <FormLabel>Heart Rate (bpm)</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="72" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                          <Input type="number" placeholder="72" {...field} onChange={e => field.onChange(parseInt(e.target.value) || '')} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
