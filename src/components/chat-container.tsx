@@ -24,7 +24,7 @@ export function ChatContainer() {
 
   // Sign in user anonymously on component mount
   useEffect(() => {
-    if (!user && !isUserLoading) {
+    if (!user && !isUserLoading && auth) {
       signInAnonymously(auth);
     }
   }, [user, isUserLoading, auth]);
@@ -38,8 +38,8 @@ export function ChatContainer() {
     const userQuery = query || input;
     if (!userQuery.trim()) return;
 
-    if (!user) {
-        console.error("User not authenticated, cannot proceed.");
+    if (!user || !firestore) {
+        console.error("User not authenticated or Firestore not available, cannot proceed.");
         // Optionally show a toast message to the user
         return;
     }
@@ -57,14 +57,14 @@ export function ChatContainer() {
     // Now getAIResponse is called with the userId.
     const aiResponse = await getAIResponse(user.uid, userQuery);
 
-    // The client-side logging is no longer needed here as it's handled on the server action.
-    // logConsultation(firestore, {
-    //   userId: user.uid,
-    //   userQuery: userQuery,
-    //   aiResponse: aiResponse.insights,
-    //   confidenceScore: aiResponse.confidenceScore,
-    //   handoffStatus: aiResponse.handoffRequired ? "pending" : "not_required",
-    // });
+    // The client-side logging is now re-enabled.
+    logConsultation(firestore, {
+      userId: user.uid,
+      userQuery: userQuery,
+      aiResponse: aiResponse.insights,
+      confidenceScore: aiResponse.confidenceScore,
+      handoffStatus: aiResponse.handoffRequired ? "pending" : "not_required",
+    });
 
     const aiMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
