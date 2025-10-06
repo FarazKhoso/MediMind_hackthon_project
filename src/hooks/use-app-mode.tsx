@@ -15,24 +15,24 @@ interface AppModeContextType {
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
 export const AppModeProvider = ({ children }: { children: ReactNode }) => {
-  const { user, userProfile } = useUser();
+  const { userProfile, isUserProfileLoading } = useUser();
   const isProvider = userProfile?.role === 'provider';
 
   const [mode, setModeState] = useState<AppMode>('patient');
 
   useEffect(() => {
-    // When user logs in, if they are a provider, default to provider mode.
-    // Otherwise, default to patient mode.
-    if (isProvider) {
-      setModeState('provider');
-    } else {
-      setModeState('patient');
+    if (!isUserProfileLoading) {
+      if (isProvider) {
+        setModeState('provider');
+      } else {
+        setModeState('patient');
+      }
     }
-  }, [isProvider, user]);
+  }, [isProvider, isUserProfileLoading]);
   
   const setMode = (newMode: AppMode) => {
-    // A non-provider cannot switch to provider mode.
     if (newMode === 'provider' && !isProvider) {
+      console.warn("Attempted to switch to provider mode without provider role.");
       return;
     }
     setModeState(newMode);

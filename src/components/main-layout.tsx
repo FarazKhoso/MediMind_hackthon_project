@@ -11,7 +11,6 @@ import { useAuth } from '@/firebase';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { ModeSwitcher } from './mode-switcher';
 
-
 const PatientMenu = () => (
     <>
         <SidebarMenuItem>
@@ -94,17 +93,16 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     return (
         <SidebarProvider>
             <Sidebar>
-                <SidebarContent className="p-4">
+                <SidebarContent className="flex flex-col p-4">
                     <SidebarHeader>
                         <Logo />
                     </SidebarHeader>
                     
-                    <SidebarMenu>
+                    <SidebarMenu className="flex-1">
                         {mode === 'patient' ? <PatientMenu /> : <ProviderMenu />}
                     </SidebarMenu>
 
-                    <SidebarFooter className="mt-auto">
-                        <ModeSwitcher />
+                    <SidebarFooter>
                         <SidebarMenu>
                             {!user || user.isAnonymous ? (
                                 <>
@@ -134,6 +132,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                 </SidebarMenuItem>
                             )}
                         </SidebarMenu>
+                        <ModeSwitcher />
                     </SidebarFooter>
                 </SidebarContent>
             </Sidebar>

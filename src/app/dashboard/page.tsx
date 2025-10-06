@@ -7,14 +7,13 @@ import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, User, Clock, DollarSign, ShieldAlert, Star } from 'lucide-react';
+import { Loader2, User, ShieldAlert, Star, MapPin } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
-
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
@@ -22,17 +21,12 @@ export default function ProviderDashboard() {
   const router = useRouter();
   const { mode } = useAppMode();
 
-  // Query for booking requests, memoized for performance.
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.isAnonymous) return null;
-    
-    return query(
-        collection(firestore, 'bookings'),
-        where('status', '==', 'requested')
-    );
+    return query(collection(firestore, 'bookings'), where('status', '==', 'requested'));
   }, [firestore, user]);
     
-  const { data: bookingRequests, isLoading: bookingsLoading, error: bookingsError } = useCollection(bookingsQuery);
+  const { data: bookingRequests, isLoading: bookingsLoading } = useCollection(bookingsQuery);
   
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -51,6 +45,10 @@ export default function ProviderDashboard() {
     }
     setUpdatingId(null);
   };
+  
+  const handleNavigateToChat = (bookingId: string) => {
+    router.push(`/tracking/${bookingId}`);
+  }
 
   if (isUserLoading) {
     return <div className="flex h-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -95,37 +93,42 @@ export default function ProviderDashboard() {
 
           {bookingRequests?.map((booking) => (
             <Card key={booking.id} className="shadow-md animate-in fade-in rounded-xl overflow-hidden">
-                <CardContent className="p-4 flex items-center gap-4">
-                    <Avatar className="h-14 w-14 border">
-                        <AvatarFallback><User size={32}/></AvatarFallback>
-                    </Avatar>
-                    <div className="flex-grow">
-                        <div className="flex justify-between items-start">
-                            <div>
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                        <Avatar className="h-12 w-12 border">
+                            <AvatarFallback><User size={28}/></AvatarFallback>
+                        </Avatar>
+                        <div className="flex-grow">
+                             <div className="flex justify-between items-center">
                                 <h3 className="font-headline font-semibold">{booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)} Request</h3>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-1">
-                                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400"/> 4.9
-                                    </div>
-                                    <span>&middot;</span>
-                                    <p>5 mins away</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
                                 <p className="text-xl font-bold text-primary">PKR {booking.bidPrice}</p>
-                                <Badge variant="secondary">{booking.timing}</Badge>
-                            </div>
+                             </div>
+                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
+                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400"/> 4.9
+                                </div>
+                                <span>&middot;</span>
+                                <p>5 mins away</p>
+                             </div>
                         </div>
-
-                        <div className="flex gap-2 mt-4">
+                    </div>
+                </CardHeader>
+                <CardContent className="p-4 pt-0">
+                    <div className="border-t pt-4">
+                        <div className="flex items-center text-sm gap-2 text-muted-foreground mb-4">
+                            <MapPin className="w-4 h-4" />
+                            <span>{booking.location}</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
                             <Button 
                                 onClick={() => handleAccept(booking.id)}
                                 disabled={updatingId === booking.id}
-                                className="w-full bg-green-500 hover:bg-green-600"
+                                className="bg-green-500 hover:bg-green-600"
                             >
                                 {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
                             </Button>
-                            <Button variant="ghost" className="w-full text-red-500 hover:bg-red-50 hover:text-red-600">Decline</Button>
+                            <Button variant="outline" onClick={() => handleNavigateToChat(booking.id)}>Negotiate</Button>
+                            <Button variant="ghost" className="text-red-500 hover:bg-red-50 hover:text-red-600">Decline</Button>
                         </div>
                     </div>
                 </CardContent>
