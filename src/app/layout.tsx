@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus } from 'lucide-react';
+import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -36,6 +36,22 @@ export default function RootLayout({
                   <Logo />
                 </SidebarHeader>
                 <SidebarMenu>
+                   <SidebarMenuItem>
+                    <Link href="/book-service">
+                      <SidebarMenuButton tooltip="Book a Service">
+                        <HandPlatter />
+                        <span>Book a Service</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                   <SidebarMenuItem>
+                    <Link href="/dashboard">
+                      <SidebarMenuButton tooltip="Provider Dashboard">
+                        <LayoutDashboard />
+                        <span>Dashboard</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <Link href="/">
                       <SidebarMenuButton tooltip="Symptom Checker">
