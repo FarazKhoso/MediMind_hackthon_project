@@ -2,7 +2,8 @@
 'use client';
 
 import { useState } from 'react';
-import { mentalHealthChatbot, MentalHealthChatbotInput, MentalHealthChatbotOutput } from '@/ai/flows/mental-health-chatbot';
+import { getMentalHealthResponse } from '@/app/actions';
+import { type MentalHealthChatbotInput, type MentalHealthChatbotOutput } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, SendHorizonal, Bot, User, BrainCircuit } from 'lucide-react';
@@ -11,6 +12,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { MessageSquareHeart } from 'lucide-react';
 
 
 interface ChatMessage {
@@ -59,7 +61,7 @@ export default function MentalHealthPage() {
     setInput("");
 
     try {
-      const response = await mentalHealthChatbot({ message: input });
+      const response = await getMentalHealthResponse({ message: input });
       const assistantMessage: ChatMessage = { role: 'assistant', content: response.response, escalate: response.escalate };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {

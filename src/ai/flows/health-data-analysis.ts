@@ -4,26 +4,12 @@
  * @fileOverview An AI agent to analyze health data for potential risks.
  *
  * - healthDataAnalysis - Analyzes user's health data (e.g., BP, Sugar) for risks.
- * - HealthDataAnalysisInput - The input type for the healthDataAnalysis function.
- * - HealthDataAnalysisOutput - The return type for the healthDataAnalysis function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { HealthDataAnalysisInputSchema, HealthDataAnalysisOutputSchema, type HealthDataAnalysisInput, type HealthDataAnalysisOutput } from '@/app/actions';
 
-export const HealthDataAnalysisInputSchema = z.object({
-  bloodPressure: z.string().optional().describe("User's blood pressure reading (e.g., '150/90')."),
-  bloodSugar: z.string().optional().describe("User's blood sugar level (e.g., '120 mg/dL')."),
-  heartRate: z.number().optional().describe("User's heart rate (e.g., 95)."),
-});
-export type HealthDataAnalysisInput = z.infer<typeof HealthDataAnalysisInputSchema>;
-
-export const HealthDataAnalysisOutputSchema = z.object({
-  riskAnalysis: z.string().describe('Analysis of the health data and potential risks.'),
-  recommendations: z.string().describe('Recommendations based on the analysis.'),
-  isDoctorAlertRequired: z.boolean().describe('Whether an alert to a doctor is recommended.'),
-});
-export type HealthDataAnalysisOutput = z.infer<typeof HealthDataAnalysisOutputSchema>;
 
 export async function healthDataAnalysis(input: HealthDataAnalysisInput): Promise<HealthDataAnalysisOutput> {
   return healthDataAnalysisFlow(input);

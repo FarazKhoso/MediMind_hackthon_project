@@ -4,23 +4,12 @@
  * @fileOverview An empathetic AI agent for mental health support.
  *
  * - mentalHealthChatbot - Provides support for stress, anxiety, and depression.
- * - MentalHealthChatbotInput - The input type for the mentalHealthChatbot function.
- * - MentalHealthChatbotOutput - The return type for the mentalHealthChatbot function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { MentalHealthChatbotInputSchema, MentalHealthChatbotOutputSchema, type MentalHealthChatbotInput, type MentalHealthChatbotOutput } from '@/app/actions';
 
-export const MentalHealthChatbotInputSchema = z.object({
-  message: z.string().describe("User's message about their mental state."),
-});
-export type MentalHealthChatbotInput = z.infer<typeof MentalHealthChatbotInputSchema>;
-
-export const MentalHealthChatbotOutputSchema = z.object({
-  response: z.string().describe('An empathetic response with coping tips in Roman Urdu.'),
-  escalate: z.boolean().describe('A flag to indicate if the case seems serious and requires handoff.'),
-});
-export type MentalHealthChatbotOutput = z.infer<typeof MentalHealthChatbotOutputSchema>;
 
 export async function mentalHealthChatbot(input: MentalHealthChatbotInput): Promise<MentalHealthChatbotOutput> {
   return mentalHealthChatbotFlow(input);

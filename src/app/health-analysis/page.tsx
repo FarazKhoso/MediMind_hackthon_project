@@ -4,11 +4,11 @@
 import { useState } from 'react';
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { healthDataAnalysis, HealthDataAnalysisInput, HealthDataAnalysisOutput, HealthDataAnalysisInputSchema } from '@/ai/flows/health-data-analysis';
+import { analyzeHealthData } from '@/app/actions';
+import { HealthDataAnalysisInputSchema, type HealthDataAnalysisInput, type HealthDataAnalysisOutput } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -33,7 +33,7 @@ export default function HealthAnalysisPage() {
     setLoading(true);
     setResult(null);
     try {
-      const response = await healthDataAnalysis(data);
+      const response = await analyzeHealthData(data);
       setResult(response);
     } catch (error) {
       console.error("Error calling health data analysis agent:", error);

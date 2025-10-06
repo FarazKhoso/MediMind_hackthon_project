@@ -4,28 +4,11 @@
  * @fileOverview An AI agent for medicine and vaccination reminders.
  *
  * - medicineReminder - Sets up a reminder schedule.
- * - MedicineReminderInput - The input type for the medicineReminder function.
- * - MedicineReminderOutput - The return type for the medicineReminder function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-
-export const MedicineReminderInputSchema = z.object({
-  request: z.string().describe("User's request for a reminder. e.g., 'Set a reminder for Panadol every 6 hours' or 'Polio vaccine is due on 10/10/2025'"),
-});
-export type MedicineReminderInput = z.infer<typeof MedicineReminderInputSchema>;
-
-export const MedicineReminderOutputSchema = z.object({
-  confirmation: z.string().describe('Confirmation message in Roman Urdu.'),
-  schedule: z.object({
-    medicineOrVaccine: z.string(),
-    frequency: z.string().optional(),
-    date: z.string().optional(),
-    time: z.string().optional(),
-  }).describe("The parsed schedule details."),
-});
-export type MedicineReminderOutput = z.infer<typeof MedicineReminderOutputSchema>;
+import { MedicineReminderInputSchema, MedicineReminderOutputSchema, type MedicineReminderInput, type MedicineReminderOutput } from '@/app/actions';
 
 export async function medicineReminder(input: MedicineReminderInput): Promise<MedicineReminderOutput> {
   return medicineReminderFlow(input);
