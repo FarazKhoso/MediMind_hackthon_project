@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useUser, useFirestore, useCollection } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,21 +17,22 @@ export default function ProviderDashboard() {
   const firestore = useFirestore();
   const router = useRouter();
 
-  // Query for booking requests
-  const bookingsQuery = user
-    ? query(
+  // Query for booking requests, memoized for performance.
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    // In a real app, you'd also query based on provider's service type and location
+    return query(
         collection(firestore, 'bookings'),
         where('status', '==', 'requested')
-        // In a real app, you'd also query based on provider's service type and location
-      )
-    : null;
+    );
+  }, [firestore]);
     
   const { data: bookingRequests, isLoading: bookingsLoading } = useCollection(bookingsQuery);
   
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleAccept = async (bookingId: string) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     setUpdatingId(bookingId);
     try {
       const bookingRef = doc(firestore, 'bookings', bookingId);
