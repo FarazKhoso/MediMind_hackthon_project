@@ -37,7 +37,7 @@ export default function RootLayout({
                 </SidebarHeader>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <Link href="/" legacyBehavior passHref>
+                    <Link href="/">
                       <SidebarMenuButton tooltip="Symptom Checker">
                         <Bot />
                         <span>Symptom Checker</span>
@@ -45,7 +45,7 @@ export default function RootLayout({
                     </Link>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <Link href="/disease-tracking" legacyBehavior passHref>
+                    <Link href="/disease-tracking">
                       <SidebarMenuButton tooltip="Disease Tracking">
                         <HeartPulse />
                         <span>Disease Tracking</span>
@@ -53,7 +53,7 @@ export default function RootLayout({
                     </Link>
                   </SidebarMenuItem>
                    <SidebarMenuItem>
-                    <Link href="/health-analysis" legacyBehavior passHref>
+                    <Link href="/health-analysis">
                       <SidebarMenuButton tooltip="Health Analysis">
                         <Stethoscope />
                         <span>Health Analysis</span>
@@ -61,7 +61,7 @@ export default function RootLayout({
                     </Link>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <Link href="/medicine-reminder" legacyBehavior passHref>
+                    <Link href="/medicine-reminder">
                       <SidebarMenuButton tooltip="Reminders">
                         <Syringe />
                         <span>Reminders</span>
@@ -69,7 +69,7 @@ export default function RootLayout({
                     </Link>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <Link href="/mental-health" legacyBehavior passHref>
+                    <Link href="/mental-health">
                       <SidebarMenuButton tooltip="Mental Health">
                         <MessageSquareHeart />
                         <span>Mental Health</span>
