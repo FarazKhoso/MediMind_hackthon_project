@@ -1,83 +1,134 @@
 /**
- * @fileOverview
- * This ruleset enforces a strict user-ownership model for MediMind AI application data.
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for user profiles and their associated consultations and alerts. Doctors are managed in a separate collection with potential role-based access (currently owner-only).
  *
  * Data Structure:
- * - User profiles are stored under `/users/{userId}`.
- * - Consultation logs are stored as subcollections under each user: `/users/{userId}/consultationLogs/{logId}`.
- * - Doctor profiles are stored under `/doctors/{doctorId}`.
+ * - /users/{userId}: Stores user profiles.
+ * - /users/{userId}/consultations/{consultationId}: Stores consultations for each user.
+ * - /users/{userId}/consultations/{consultationId}/alerts/{alertId}: Stores alerts related to a specific consultation.
+ * - /doctors/{doctorId}: Stores doctor profiles.
  *
  * Key Security Decisions:
- * - Users can only access their own profile data and consultation logs.
- * - Listing all users is disallowed.
- * - Doctor access control is based on undefined administrative roles (requires further implementation).
+ * - User profiles and their related data (consultations, alerts) are strictly accessible only by the owning user.
+ * - Doctor profiles are owner-writeable.
  *
  * Denormalization for Authorization:
- * - The `ConsultationLog` entity includes a `userId` field, denormalizing the user-ownership to avoid `get()` calls during authorization.
- *
- * Structural Segregation:
- * - User-specific data (profiles and logs) are stored under `/users/{userId}`, ensuring private access.
+ * - Consultations include the `userId` to allow direct ownership checks without requiring additional `get()` calls to the `/users/{userId}` document.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile data. Only the authenticated user can read and write their own profile.
+     * @description Enforces user-ownership for user profiles. Only the authenticated user can read or write their own profile.
      * @path /users/{userId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create their own profile at /users/user_abc with matching id.
-     * @allow (get, update, delete) - Authenticated user with UID 'user_abc' can read, update, and delete their own profile at /users/user_abc.
-     * @deny (create) - Authenticated user with UID 'user_abc' cannot create a profile at /users/user_xyz.
-     * @deny (get, update, delete) - Authenticated user with UID 'user_abc' cannot read, update, or delete a profile at /users/user_xyz.
-     * @principle Enforces document ownership for all operations on user profiles.  Validates the resource `id` on create.
+     * @allow (create) - Authenticated user with UID 'user_abc' can create their profile if request.auth.uid == 'user_abc'.
+     * @allow (get, list) - Authenticated user with UID 'user_abc' can read their profile if request.auth.uid == 'user_abc'.
+     * @allow (update, delete) - Authenticated user with UID 'user_abc' can update/delete their profile if request.auth.uid == 'user_abc'.
+     * @deny (create) - Authenticated user with UID 'user_xyz' cannot create a profile with ID 'user_abc'.
+     * @deny (get, list) - Authenticated user with UID 'user_xyz' cannot read the profile of 'user_abc'.
+     * @deny (update, delete) - Authenticated user with UID 'user_xyz' cannot update/delete the profile of 'user_abc'.
+     * @principle Enforces document ownership for all operations on user profiles.
      */
     match /users/{userId} {
+      // Helper function to check if the request is made by the owner
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
+
+      // Helper function to check if the request is made by the owner and the document exists.
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
+
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to consultation logs for each user. Only the authenticated user can read and write their own logs.
-     * @path /users/{userId}/consultationLogs/{logId}
-     * @allow (create) - Authenticated user with UID 'user_abc' can create a log under /users/user_abc/consultationLogs/log_123 with userId: 'user_abc'.
-     * @allow (get, list, update, delete) - Authenticated user with UID 'user_abc' can read, list, update, and delete logs under /users/user_abc/consultationLogs/{logId}.
-     * @deny (create) - Authenticated user with UID 'user_abc' cannot create a log under /users/user_xyz/consultationLogs/log_123.
-     * @deny (get, list, update, delete) - Authenticated user with UID 'user_abc' cannot read, list, update, or delete logs under /users/user_xyz/consultationLogs/{logId}.
-     * @principle Enforces document ownership for all operations on consultation logs.  Validates the resource `userId` on create.
+     * @description Enforces user-ownership for consultations. Only the authenticated user can read or write their own consultations.
+     * @path /users/{userId}/consultations/{consultationId}
+     * @allow (create) - Authenticated user with UID 'user_abc' can create a consultation under their profile.
+     * @allow (get, list) - Authenticated user with UID 'user_abc' can read consultations under their profile.
+     * @allow (update, delete) - Authenticated user with UID 'user_abc' can update/delete consultations under their profile.
+     * @deny (create) - Authenticated user with UID 'user_xyz' cannot create a consultation under user 'user_abc'.
+     * @deny (get, list) - Authenticated user with UID 'user_xyz' cannot read consultations under user 'user_abc'.
+     * @deny (update, delete) - Authenticated user with UID 'user_xyz' cannot update/delete consultations under user 'user_abc'.
+     * @principle Enforces document ownership for all operations on consultations.
      */
-    match /users/{userId}/consultationLogs/{logId} {
+    match /users/{userId}/consultations/{consultationId} {
+      // Helper function to check if the request is made by the owner
       function isOwner(userId) {
         return request.auth.uid == userId;
       }
+
+      // Helper function to check if the request is made by the owner and the document exists.
       function isExistingOwner(userId) {
         return isOwner(userId) && resource != null;
       }
+
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+     /**
+      * @description Enforces user-ownership for alerts within a consultation. Only the authenticated user can read or write alerts related to their consultations.
+      * @path /users/{userId}/consultations/{consultationId}/alerts/{alertId}
+      * @allow (create) - Authenticated user with UID 'user_abc' can create an alert under their consultation.
+      * @allow (get, list) - Authenticated user with UID 'user_abc' can read alerts under their consultation.
+      * @allow (update, delete) - Authenticated user with UID 'user_abc' can update/delete alerts under their consultation.
+      * @deny (create) - Authenticated user with UID 'user_xyz' cannot create an alert under user 'user_abc''s consultation.
+      * @deny (get, list) - Authenticated user with UID 'user_xyz' cannot read alerts under user 'user_abc''s consultation.
+      * @deny (update, delete) - Authenticated user with UID 'user_xyz' cannot update/delete alerts under user 'user_abc''s consultation.
+      * @principle Enforces document ownership for all operations on alerts.
+      */
+    match /users/{userId}/consultations/{consultationId}/alerts/{alertId} {
+      // Helper function to check if the request is made by the owner
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      // Helper function to check if the request is made by the owner and the document exists.
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to doctor profile data. Access is currently open but should be restricted to administrative roles in the future.
+     * @description Restricts access to doctor profiles.  For now, only the owner of the doctor profile can make changes.  This could be expanded to use role-based access later.
      * @path /doctors/{doctorId}
-     * @allow (get, list) - Any user can read doctor profiles.
-     * @allow (create, update, delete) - No one can create, update or delete doctor profiles.  TODO: Implement admin role based access.
-     * @principle Restricts access to doctor data to authenticated users with a specific administrative role (not yet implemented).
+     * @allow (create) -  Anyone can create a doctor profile.
+     * @allow (get, list) - Anyone can read/list doctor profiles.
+     * @allow (update, delete) - Authenticated user with UID 'doctor_abc' can update/delete doctor profile 'doctor_abc'.
+     * @deny (update, delete) - Authenticated user with UID 'user_xyz' cannot update/delete the doctor profile of 'doctor_abc'.
      */
     match /doctors/{doctorId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin role validation once roles are defined.
+        // Helper function to check if the request is made by the owner
+        function isOwner(doctorId) {
+            return request.auth.uid == doctorId;
+        }
+
+        function isExistingOwner(doctorId) {
+            return isOwner(doctorId) && resource != null;
+        }
+
+        allow get: if true;
+        allow list: if true;
+        allow create: if isOwner(doctorId);
+        allow update: if isExistingOwner(doctorId);
+        allow delete: if isExistingOwner(doctorId);
     }
   }
 }
