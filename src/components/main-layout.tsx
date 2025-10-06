@@ -98,14 +98,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <SidebarHeader>
                         <Logo />
                     </SidebarHeader>
-
-                    <ModeSwitcher />
                     
                     <SidebarMenu>
                         {mode === 'patient' ? <PatientMenu /> : <ProviderMenu />}
                     </SidebarMenu>
 
                     <SidebarFooter className="mt-auto">
+                        <ModeSwitcher />
                         <SidebarMenu>
                             {!user || user.isAnonymous ? (
                                 <>
