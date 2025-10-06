@@ -1,16 +1,10 @@
 {
   "entities": {
-    "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+    "UserProfile": {
+      "title": "User Profile",
       "type": "object",
-      "description": "Represents a user of the MediMind AI application.",
+      "description": "Represents a user of the application, who can be either a Customer or a Provider.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the user.",
-          "format": "uuid"
-        },
         "email": {
           "type": "string",
           "description": "Email address of the user.",
@@ -19,12 +13,143 @@
         "name": {
           "type": "string",
           "description": "Full name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user.",
+          "enum": [
+            "customer",
+            "provider"
+          ]
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the user."
         }
       },
       "required": [
-        "id",
         "email",
-        "name"
+        "name",
+        "role"
+      ]
+    },
+    "ProviderProfile": {
+      "title": "Provider Profile",
+      "type": "object",
+      "description": "Stores detailed information about a service provider.",
+      "properties": {
+        "serviceType": {
+          "type": "string",
+          "description": "The type of service the provider offers.",
+          "enum": [
+            "doctor",
+            "nurse",
+            "compounder"
+          ]
+        },
+        "licenseUrl": {
+          "type": "string",
+          "description": "URL to the provider's professional license.",
+          "format": "uri"
+        },
+        "isVerified": {
+          "type": "boolean",
+          "description": "Indicates if the provider's license and profile have been verified by an admin."
+        },
+        "availabilityStatus": {
+          "type": "string",
+          "description": "The current availability of the provider.",
+          "enum": [
+            "online",
+            "offline"
+          ]
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average rating of the provider from 1 to 5."
+        }
+      },
+      "required": [
+        "serviceType",
+        "licenseUrl",
+        "isVerified",
+        "availabilityStatus"
+      ]
+    },
+    "Booking": {
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a single service booking.",
+      "properties": {
+        "customerId": {
+          "type": "string",
+          "description": "The ID of the customer who made the booking."
+        },
+        "providerId": {
+          "type": "string",
+          "description": "The ID of the provider who accepted the booking."
+        },
+        "serviceType": {
+          "type": "string",
+          "description": "Type of service requested.",
+          "enum": [
+            "doctor",
+            "nurse",
+            "compounder"
+          ]
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          }
+        },
+        "timing": {
+          "type": "string",
+          "description": "Requested service time.",
+          "format": "date-time"
+        },
+        "initialBid": {
+          "type": "number",
+          "description": "The initial price offered by the customer."
+        },
+        "finalPrice": {
+          "type": "number",
+          "description": "The final agreed-upon price."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current status of the booking.",
+          "enum": [
+            "requested",
+            "negotiating",
+            "accepted",
+            "in_progress",
+            "completed",
+            "cancelled"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "customerId",
+        "serviceType",
+        "location",
+        "timing",
+        "initialBid",
+        "status"
       ]
     },
     "Consultation": {
@@ -72,80 +197,12 @@
         "confidenceScore",
         "timestamp"
       ]
-    },
-    "Doctor": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Doctor",
-      "type": "object",
-      "description": "Represents a medical doctor who can be handed off consultations.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the doctor.",
-          "format": "uuid"
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the doctor."
-        },
-        "specialty": {
-          "type": "string",
-          "description": "Medical specialty of the doctor."
-        },
-        "fcmToken": {
-          "type": "string",
-          "description": "Firebase Cloud Messaging token for the doctor to receive handoff requests."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "specialty",
-        "fcmToken"
-      ]
-    },
-    "Alert": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Alert",
-      "type": "object",
-      "description": "Represents an alert message shown to the user.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the alert.",
-          "format": "uuid"
-        },
-        "consultationId": {
-          "type": "string",
-          "description": "Reference to Consultation. (Relationship: Consultation 1:N Alert)"
-        },
-        "message": {
-          "type": "string",
-          "description": "The alert message to be displayed to the user."
-        },
-        "type": {
-          "type": "string",
-          "description": "Type of alert (e.g., disclaimer, low confidence)."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of when the alert was generated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "consultationId",
-        "message",
-        "type",
-        "timestamp"
-      ]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "email",
+      "phone"
     ]
   },
   "firestore": {
@@ -153,15 +210,47 @@
       {
         "path": "/users/{userId}",
         "definition": {
-          "entityName": "User",
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/User"
+            "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profiles. Access is restricted to the user themselves (path-based ownership).",
+          "description": "Stores public profiles for all users (customers and providers). Access is restricted to the user themselves (path-based ownership).",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user."
+              "description": "The unique identifier of the user, from Firebase Auth."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/providers/{providerId}",
+        "definition": {
+          "entityName": "ProviderProfile",
+          "schema": {
+            "$ref": "#/backend/entities/ProviderProfile"
+          },
+          "description": "Stores private, verifiable information for providers. Only the provider and admins can write.",
+          "params": [
+            {
+              "name": "providerId",
+              "description": "The unique identifier of the provider, same as their userId."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores all booking requests and their states. Accessed by customers and providers involved.",
+          "params": [
+            {
+              "name": "bookingId",
+              "description": "The unique identifier for the booking."
             }
           ]
         }
@@ -173,7 +262,7 @@
           "schema": {
             "$ref": "#/backend/entities/Consultation"
           },
-          "description": "Stores consultations for each user. Includes denormalized 'userId' to ensure authorization independence.",
+          "description": "Stores AI consultations for each user.",
           "params": [
             {
               "name": "userId",
@@ -182,51 +271,10 @@
             {
               "name": "consultationId",
               "description": "The unique identifier of the consultation."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/consultations/{consultationId}/alerts/{alertId}",
-        "definition": {
-          "entityName": "Alert",
-          "schema": {
-            "$ref": "#/backend/entities/Alert"
-          },
-          "description": "Stores alerts related to a specific consultation.  It resides as a subcollection of consultations for efficient retrieval.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            },
-            {
-              "name": "consultationId",
-              "description": "The unique identifier of the consultation."
-            },
-            {
-              "name": "alertId",
-              "description": "The unique identifier of the alert."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/doctors/{doctorId}",
-        "definition": {
-          "entityName": "Doctor",
-          "schema": {
-            "$ref": "#/backend/entities/Doctor"
-          },
-          "description": "Stores doctor profiles. Access control would typically involve admin roles.",
-          "params": [
-            {
-              "name": "doctorId",
-              "description": "The unique identifier of the doctor."
             }
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed to ensure security, scalability, and debuggability, adhering to the principles of Authorization Independence, Clarity of Intent, DBAC, and QAPs. User data and consultations are segregated for security and clarity. Authorization is primarily path-based for user-owned data (users and their consultations). Doctors are stored in a separate collection and can be managed with appropriate access control rules (omitted in this definition but could include roles for admin users). Alerts are nested under consultations to provide context and improve data retrieval efficiency.\n\n**Authorization Independence (Denormalization):**\n*   `consultations`: The `userId` is included in each consultation document. This ensures that rules to control access to a consultation based on the user are independent of the `users` collection, avoiding `get()` calls in security rules.\n\n**Structural Segregation (Homogeneous Security Posture):**\n*   User data is stored under `/users/{userId}`, guaranteeing that all documents in that collection have the same access requirements (only the user can access their data).\n*   Consultations are nested under users (`/users/{userId}/consultations/{consultationId}`), which restricts access based on user ownership. Alerts are nested under consultations. This approach maintains a clear separation of concerns, enhancing security and debuggability. Doctors are in their own collection, separate from user data.\n\n**Access Modeling:**\n*   Private Data: `/users/{userId}` employs Path-Based ownership, a secure pattern for user-specific data.\n*   Hierarchical Paths: `/users/{userId}/consultations/{consultationId}` exemplifies the User 1:N Entity relationship pattern, offering clear ownership and efficient security rules.\n\n**QAPs Support:**\n*   The structure enables secure `list` operations. Since all consultations under a user path (`/users/{userId}/consultations`) are owned by that user, listing consultations is secure without requiring complex filtering in rules."
+    ]
   }
 }

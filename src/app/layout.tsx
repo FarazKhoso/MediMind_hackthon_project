@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
-import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Bot, HeartPulse, Stethoscope, Syringe, MessageSquareHeart } from 'lucide-react';
+import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
@@ -77,6 +77,26 @@ export default function RootLayout({
                     </Link>
                   </SidebarMenuItem>
                 </SidebarMenu>
+                <SidebarFooter className="mt-auto">
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <Link href="/login">
+                                <SidebarMenuButton tooltip="Login">
+                                    <LogIn />
+                                    <span>Login</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem>
+                            <Link href="/register">
+                                <SidebarMenuButton tooltip="Register as Provider">
+                                    <UserPlus />
+                                    <span>Register as Provider</span>
+                                </SidebarMenuButton>
+                            </Link>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarFooter>
               </SidebarContent>
             </Sidebar>
             <SidebarInset>
