@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { diseaseTrackingAgent, DiseaseTrackingOutput } from '@/ai/flows/disease-tracking-agent';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const mockData = {
     "Dengue": {
@@ -68,6 +69,7 @@ export default function DiseaseTrackingPage() {
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
         <h1 className="text-xl font-headline font-bold">Disease Outbreak Tracking</h1>
+        <SidebarTrigger />
       </header>
       <main className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto grid gap-8 md:grid-cols-2">

@@ -8,6 +8,21 @@ import {
   initiateDoctorHandoff,
   type InitiateDoctorHandoffOutput,
 } from '@/ai/flows/doctor-handoff-initiation';
+import {
+  healthDataAnalysis,
+  type HealthDataAnalysisInput,
+  type HealthDataAnalysisOutput,
+} from '@/ai/flows/health-data-analysis';
+import {
+  medicineReminder,
+  type MedicineReminderInput,
+  type MedicineReminderOutput,
+} from '@/ai/flows/medicine-reminder';
+import {
+  mentalHealthChatbot,
+  type MentalHealthChatbotInput,
+  type MentalHealthChatbotOutput,
+} from '@/ai/flows/mental-health-chatbot';
 
 // This is a server-side representation. We can't use the client-side `logConsultation` directly.
 // We'll call a simple server-side function to add to Firestore.
@@ -104,6 +119,49 @@ export async function requestDoctorHandoff(
       handoffInitiated: false,
       message:
         'An error occurred while trying to contact a doctor. Please try again.',
+    };
+  }
+}
+
+export async function analyzeHealthData(
+  data: HealthDataAnalysisInput
+): Promise<HealthDataAnalysisOutput> {
+  try {
+    return await healthDataAnalysis(data);
+  } catch (error) {
+    console.error('Error in health data analysis:', error);
+    return {
+      riskAnalysis: 'Analysis failed.',
+      recommendations: 'Could not process the data.',
+      isDoctorAlertRequired: false,
+    };
+  }
+}
+
+export async function setMedicineReminder(
+  data: MedicineReminderInput
+): Promise<MedicineReminderOutput> {
+  try {
+    return await medicineReminder(data);
+  } catch (error) {
+    console.error('Error setting reminder:', error);
+    return {
+      confirmation: 'Failed to set reminder.',
+      schedule: { medicineOrVaccine: '' },
+    };
+  }
+}
+
+export async function getMentalHealthResponse(
+  data: MentalHealthChatbotInput
+): Promise<MentalHealthChatbotOutput> {
+  try {
+    return await mentalHealthChatbot(data);
+  } catch (error) {
+    console.error('Error in mental health chat:', error);
+    return {
+      response: 'Sorry, I am unable to respond at the moment.',
+      escalate: false,
     };
   }
 }
