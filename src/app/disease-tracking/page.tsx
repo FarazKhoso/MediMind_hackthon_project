@@ -4,46 +4,58 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { diseaseTrackingAgent, DiseaseTrackingOutput } from '@/ai/flows/disease-tracking-agent';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+const mockData = {
+    "Dengue": {
+        "cases": {
+            "Karachi": [
+                {"case_id": "karachi_1", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_2", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_3", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_4", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_5", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_6", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_7", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_8", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_9", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"},
+                {"case_id": "karachi_10", "date": "2025-10-06", "symptoms": "fever, headache", "severity": "medium"}
+            ],
+            "Lahore": [
+                {"case_id": "lahore_1", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_2", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_3", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_4", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_5", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_6", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_7", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_8", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_9", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"},
+                {"case_id": "lahore_10", "date": "2025-10-06", "symptoms": "fever, joint pain", "severity": "high"}
+            ]
+        }
+    }
+};
+
 export default function DiseaseTrackingPage() {
-  const [disease, setDisease] = useState('Dengue');
-  const [cases, setCases] = useState([
-    { location: 'Lahore', count: 10 },
-    { location: 'Karachi', count: 5 },
-  ]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DiseaseTrackingOutput | null>(null);
-
-  const handleCaseChange = (index: number, field: 'location' | 'count', value: string) => {
-    const newCases = [...cases];
-    if (field === 'count') {
-      newCases[index][field] = parseInt(value, 10) || 0;
-    } else {
-      newCases[index][field] = value;
-    }
-    setCases(newCases);
-  };
-
-  const addCaseEntry = () => {
-    setCases([...cases, { location: '', count: 0 }]);
-  };
-
-  const removeCaseEntry = (index: number) => {
-    const newCases = cases.filter((_, i) => i !== index);
-    setCases(newCases);
-  };
+  const [jsonData, setJsonData] = useState(JSON.stringify(mockData, null, 2));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setResult(null);
     try {
-      const response = await diseaseTrackingAgent({ disease, cases });
+      const parsedData = JSON.parse(jsonData);
+      const disease = Object.keys(parsedData)[0];
+      const casesByCity = parsedData[disease].cases;
+      
+      const response = await diseaseTrackingAgent({ disease, casesByCity });
       setResult(response);
     } catch (error) {
       console.error("Error calling disease tracking agent:", error);
@@ -61,46 +73,18 @@ export default function DiseaseTrackingPage() {
         <div className="max-w-4xl mx-auto grid gap-8 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Reported Cases Data</CardTitle>
+              <CardTitle>Reported Cases Data (JSON)</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="disease">Disease</Label>
-                  <Input
-                    id="disease"
-                    value={disease}
-                    onChange={(e) => setDisease(e.target.value)}
-                    placeholder="e.g., Dengue, Flu"
+                  <Label htmlFor="jsonData">JSON Data</Label>
+                  <Textarea
+                    id="jsonData"
+                    value={jsonData}
+                    onChange={(e) => setJsonData(e.target.value)}
+                    className="min-h-[300px] font-mono text-xs"
                   />
-                </div>
-
-                <div className="space-y-4">
-                  <Label>Case Counts by Location</Label>
-                  {cases.map((caseItem, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input
-                        type="text"
-                        value={caseItem.location}
-                        onChange={(e) => handleCaseChange(index, 'location', e.target.value)}
-                        placeholder="Location (e.g., Lahore)"
-                        className="w-1/2"
-                      />
-                      <Input
-                        type="number"
-                        value={caseItem.count}
-                        onChange={(e) => handleCaseChange(index, 'count', e.target.value)}
-                        placeholder="Case count"
-                        className="w-1/2"
-                      />
-                      <Button variant="ghost" size="icon" onClick={() => removeCaseEntry(index)} type="button">
-                        &times;
-                      </Button>
-                    </div>
-                  ))}
-                  <Button variant="outline" onClick={addCaseEntry} type="button">
-                    Add Location
-                  </Button>
                 </div>
 
                 <Button type="submit" disabled={loading}>

@@ -11,12 +11,16 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const CaseSchema = z.object({
+  case_id: z.string().describe('Unique identifier for the case.'),
+  date: z.string().describe('Date of the reported case.'),
+  symptoms: z.string().describe('Symptoms of the patient.'),
+  severity: z.enum(['low', 'medium', 'high']).describe('Severity of the case.'),
+});
+
 const DiseaseTrackingInputSchema = z.object({
   disease: z.string().describe('The disease being tracked (e.g., Dengue, Flu).'),
-  cases: z.array(z.object({
-    location: z.string().describe('The location of the reported case (e.g., "Lahore").'),
-    count: z.number().describe('The number of cases reported in that location.'),
-  })).describe('A list of reported cases with their locations and counts.'),
+  casesByCity: z.record(z.array(CaseSchema)).describe('An object where keys are city names and values are arrays of cases.'),
 });
 export type DiseaseTrackingInput = z.infer<typeof DiseaseTrackingInputSchema>;
 
@@ -39,13 +43,14 @@ const prompt = ai.definePrompt({
   prompt: `You are a public health AI expert for Pakistan. Analyze the provided case data for {{{disease}}} to predict potential outbreaks, identify hotspots, and provide recommendations for health departments. Your response must be in Roman Urdu.
 
   Case Data:
-  {{#each cases}}
-  - Location: {{{location}}}, Cases: {{{count}}}
+  {{#each casesByCity}}
+  City: {{@key}}
+    Cases: {{this.length}}
   {{/each}}
 
   Based on this data, provide:
   1.  A prediction about the risk of an outbreak in Roman Urdu.
-  2.  A list of hotspot locations.
+  2.  A list of hotspot locations based on case count and severity.
   3.  A confidence score for your prediction (between 0 and 1).
   4.  Recommendations for health departments in Roman Urdu.
   `,
@@ -67,9 +72,6 @@ const diseaseTrackingAgentFlow = ai.defineFlow(
       output.prediction = `Low confidence prediction: ${output.prediction}. Please verify with more data.`;
     }
     
-    // The disclaimer is now part of the UI, but we can still enforce it here if needed.
-    // output.recommendations += ' Disclaimer: Yeh AI se bana hai. Doctor se salah lain. Yeh medical salah nahi hai.';
-
     return output;
   }
 );

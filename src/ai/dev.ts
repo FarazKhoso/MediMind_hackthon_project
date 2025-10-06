@@ -6,3 +6,6 @@ import '@/ai/flows/confidence-threshold-check.ts';
 import '@/ai/flows/ai-health-query.ts';
 import '@/ai/flows/doctor-handoff-initiation.ts';
 import '@/ai/flows/disease-tracking-agent.ts';
+import '@/ai/flows/health-data-analysis.ts';
+import '@/ai/flows/medicine-reminder.ts';
+import '@/ai/flows/mental-health-chatbot.ts';
