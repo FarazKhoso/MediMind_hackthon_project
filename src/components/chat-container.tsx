@@ -57,14 +57,16 @@ export function ChatContainer() {
     // Now getAIResponse is called with the userId.
     const aiResponse = await getAIResponse(user.uid, userQuery);
 
-    // The client-side logging is now re-enabled.
-    logConsultation(firestore, {
-      userId: user.uid,
-      userQuery: userQuery,
-      aiResponse: aiResponse.insights,
-      confidenceScore: aiResponse.confidenceScore,
-      handoffStatus: aiResponse.handoffRequired ? "pending" : "not_required",
-    });
+    // Only log consultations for non-anonymous users
+    if (!user.isAnonymous) {
+      logConsultation(firestore, {
+        userId: user.uid,
+        userQuery: userQuery,
+        aiResponse: aiResponse.insights,
+        confidenceScore: aiResponse.confidenceScore,
+        handoffStatus: aiResponse.handoffRequired ? "pending" : "not_required",
+      });
+    }
 
     const aiMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),

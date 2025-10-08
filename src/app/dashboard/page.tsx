@@ -26,9 +26,9 @@ export default function ProviderDashboard() {
   const { toast } = useToast();
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || user.isAnonymous) return null;
+    if (!firestore) return null;
     return query(collection(firestore, 'bookings'), where('status', '==', 'requested'));
-  }, [firestore, user]);
+  }, [firestore]);
     
   const { data: bookingRequests, isLoading: bookingsLoading, error } = useCollection(bookingsQuery);
   
@@ -118,7 +118,7 @@ export default function ProviderDashboard() {
     );
   }
 
-  const showPermissionError = error && (!bookingRequests || bookingRequests.length === 0);
+  const showPermissionError = error && !bookingsLoading && (!bookingRequests || bookingRequests.length === 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -140,7 +140,7 @@ export default function ProviderDashboard() {
             </Alert>
           )}
 
-          {bookingRequests && bookingRequests.length === 0 && !bookingsLoading && !error && (
+          {!bookingsLoading && bookingRequests && bookingRequests.length === 0 && !error && (
             <div className="text-center py-16">
               <p className="text-muted-foreground">No new booking requests at the moment.</p>
               <p className="text-sm text-muted-foreground/80">We'll notify you when one comes in.</p>
@@ -181,7 +181,7 @@ export default function ProviderDashboard() {
                                 disabled={updatingId === booking.id}
                                 className="bg-green-500 hover:bg-green-600"
                             >
-                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
+                                {updatingId === booking.id && updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
                             </Button>
                             <Button variant="outline" onClick={() => handleNavigateToChat(booking.id)}>Negotiate</Button>
                             <Button 
@@ -190,7 +190,7 @@ export default function ProviderDashboard() {
                               onClick={() => handleDecline(booking.id)}
                               disabled={updatingId === booking.id}
                             >
-                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
+                                {updatingId === booking.id && updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
                             </Button>
                         </div>
                     </div>

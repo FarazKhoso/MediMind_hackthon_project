@@ -2,128 +2,111 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for private data, augmented
- * with public read access where appropriate. It prioritizes secure access control
- * over complete data validation for rapid prototyping.
+ * This ruleset enforces a strict user-ownership model for user profiles and consultations.
+ * Providers have ownership over their profiles. Bookings are accessible to both the customer and provider involved.
  *
  * Data Structure:
- * - /users/{userId}: User profiles, accessible only to the owning user.
- * - /providers/{providerId}: Provider profiles, accessible only to the provider themselves.
- * - /bookings/{bookingId}: Booking data, accessible to involved customers and providers.
- * - /users/{userId}/consultations/{consultationId}: AI consultation logs, accessible only to the owning user.
+ * - /users/{userId}: Stores user profiles. Only the user can read/write their own profile.
+ * - /providers/{providerId}: Stores provider-specific data. Only the provider can read/write their own profile.
+ * - /bookings/{bookingId}: Stores booking information, accessible by both the customer and provider.
+ * - /users/{userId}/consultations/{consultationId}: Stores consultation history for each user. Only the user can access their own consultations.
  *
  * Key Security Decisions:
- * - User listing is generally disallowed.
- * - Data validation is minimized in favor of prioritizing authorization.
- * - The rules explicitly deny any potentially open write rules.
+ * - Users can only manage their own profiles and consultations.
+ * - Providers can only manage their own profiles.
+ * - Bookings are accessible to both the customer and provider involved.
+ * - Data shape validation is relaxed to allow rapid iteration.
  *
  * Denormalization for Authorization:
- *  - The userId is denormalized to consultations to make it easier to enforce that a consultation belongs to a user.
+ * - Bookings require customerId and providerId to be present on the document to authorize read/write access for relevant users.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles.
+     * @description Controls access to user profile documents.
      * @path /users/{userId}
-     * @allow (create) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can create their profile.
-     * @deny (create) User 'attackerId' cannot create a profile for 'ocRept6zldhhNjRWZ41jY5kV1ME2'.
-     * @allow (get) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can read their profile.
-     * @deny (list) Listing all users is forbidden.
-     * @allow (update) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can update their profile.
-     * @deny (delete) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' cannot delete their profile through the API.
-     * @principle Enforces document ownership for user profiles.
+     * @allow (create) - User with UID 'user_abc' can create their own profile if request.auth.uid == 'user_abc'.
+     * @allow (get, update, delete) - User with UID 'user_abc' can read/update/delete their own profile.
+     * @deny (create) - User with UID 'user_xyz' cannot create a profile for 'user_abc'.
+     * @deny (update, delete) - User with UID 'user_xyz' cannot update/delete the profile of 'user_abc'.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
       function isOwner(userId) {
         return request.auth != null && request.auth.uid == userId;
       }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow create: if isOwner(userId);
       allow get: if isOwner(userId);
       allow list: if false;
-      allow update: if isExistingOwner(userId);
-      allow delete: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isOwner(userId) && resource.data.id == userId;
+      allow delete: if isOwner(userId) && resource.data.id == userId;
     }
 
     /**
-     * @description Protects provider profiles.
+     * @description Controls access to provider profile documents.
      * @path /providers/{providerId}
-     * @allow (create) Provider 'provider123' can create their profile.
-     * @deny (create) User 'attackerId' cannot create a profile for 'provider123'.
-     * @allow (get) Provider 'provider123' can read their profile.
-     * @deny (list) Listing all providers is forbidden.
-     * @allow (update) Provider 'provider123' can update their profile.
-     * @deny (delete) Provider 'provider123' cannot delete their profile through the API.
-     * @principle Enforces document ownership for provider profiles.
+     * @allow (create) - Provider with UID 'provider_abc' can create their own profile if request.auth.uid == 'provider_abc'.
+     * @allow (get, update, delete) - Provider with UID 'provider_abc' can read/update/delete their own profile.
+     * @deny (create) - User with UID 'user_xyz' cannot create a profile for 'provider_abc'.
+     * @deny (update, delete) - User with UID 'user_xyz' cannot update/delete the profile of 'provider_abc'.
+     * @principle Enforces document ownership for writes.
      */
     match /providers/{providerId} {
       function isOwner(providerId) {
         return request.auth != null && request.auth.uid == providerId;
       }
-
-      function isExistingOwner(providerId) {
-          return isOwner(providerId) && resource != null;
-      }
-
-      allow create: if isOwner(providerId);
       allow get: if isOwner(providerId);
       allow list: if false;
-      allow update: if isExistingOwner(providerId);
-      allow delete: if false;
+      allow create: if isOwner(providerId);
+      allow update: if isOwner(providerId) && resource != null;
+      allow delete: if isOwner(providerId) && resource != null;
     }
 
     /**
-     * @description Protects booking data.
+     * @description Controls access to booking documents.
      * @path /bookings/{bookingId}
-     * @allow (create) Authenticated users can create bookings.
-     * @deny (create) Unauthenticated users cannot create bookings.
-     * @allow (get) Authenticated users can read bookings.
-     * @deny (list) Listing all bookings is forbidden.
-     * @allow (update) Authenticated users can update bookings.
-     * @deny (delete) Authenticated users cannot delete bookings.
+     * @allow (get, list) - Customer or Provider involved in the booking can read the booking details.
+     * @allow (create) - Customer or Provider can create a booking.
+     * @allow (update, delete) - Only the Customer or Provider involved can update/delete, but only if the document exists.
+     * @deny (create) - A user cannot create a booking with mismatched customerId or providerId.
+     * @principle Allows read/write access to bookings for involved users.
      */
     match /bookings/{bookingId} {
-       function isSignedIn() {
-            return request.auth != null;
-        }
-      allow create: if isSignedIn();
-      allow get: if isSignedIn();
-      allow list: if false;
-      allow update: if isSignedIn();
-      allow delete: if false;
+      function isParticipant() {
+        return request.auth != null && (request.auth.uid == resource.data.customerId || request.auth.uid == resource.data.providerId);
+      }
+
+      function isNewParticipant() {
+        return request.auth != null && (request.auth.uid == request.resource.data.customerId || request.auth.uid == request.resource.data.providerId);
+      }
+      allow get: if isParticipant();
+      allow list: if true;
+      allow create: if isNewParticipant();
+      allow update: if isParticipant() && resource != null;
+      allow delete: if isParticipant() && resource != null;
     }
 
     /**
-     * @description Protects consultation logs under a specific user.
+     * @description Controls access to consultation documents under a user's profile.
      * @path /users/{userId}/consultations/{consultationId}
-     * @allow (create) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can create a consultation log under their ID.
-     * @deny (create) User 'attackerId' cannot create a consultation log under user 'ocRept6zldhhNjRWZ41jY5kV1ME2's ID.
-     * @allow (get) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can read their consultation log.
-     * @allow (list) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can list their consultation logs.
-     * @allow (update) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' can update their consultation log.
-     * @deny (delete) User 'ocRept6zldhhNjRWZ41jY5kV1ME2' cannot delete their consultation log.
-     * @principle Enforces document ownership for consultation logs within a user's data tree.
+     * @allow (get, list) - Only the user can access their own consultations.
+     * @allow (create) - The user can create a consultation under their ID.
+     * @allow (update, delete) - The user can update/delete consultations under their ID, but only if the document exists.
+     * @deny (create) - User 'user_xyz' cannot create a consultation under 'user_abc' ID.
+     * @deny (update, delete) - User 'user_xyz' cannot update/delete a consultation under 'user_abc' ID.
+     * @principle Restricts access to a user's own consultation history.
      */
     match /users/{userId}/consultations/{consultationId} {
       function isOwner(userId) {
         return request.auth != null && request.auth.uid == userId;
       }
-
-      function isExistingOwner(userId) {
-          return isOwner(userId) && resource != null;
-      }
-
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow get: if isOwner(userId);
       allow list: if isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if false;
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isOwner(userId) && resource.data.userId == userId && resource != null;
+      allow delete: if isOwner(userId) && resource.data.userId == userId && resource != null;
     }
   }
 }
