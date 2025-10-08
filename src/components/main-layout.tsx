@@ -94,7 +94,7 @@ const ProviderMenu = () => (
 );
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-    const { user } = useUser();
+    const { user, userProfile } = useUser();
     const auth = useAuth();
     const { mode } = useAppMode();
 
@@ -123,10 +123,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                         </Link>
                                     </SidebarMenuItem>
                                     <SidebarMenuItem>
-                                        <Link href="/register">
-                                            <SidebarMenuButton tooltip="Register as Provider">
+                                        <Link href="/register/patient">
+                                            <SidebarMenuButton tooltip="Register as Patient">
                                                 <UserPlus />
-                                                <span>Register as Provider</span>
+                                                <span>Register as Patient</span>
                                             </SidebarMenuButton>
                                         </Link>
                                     </SidebarMenuItem>
@@ -135,7 +135,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                 <SidebarMenuItem>
                                     <SidebarMenuButton tooltip="Logout" onClick={() => signOut(auth)}>
                                         <LogOut />
-                                        <span>Logout</span>
+                                        <span>Logout ({userProfile?.role})</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             )}

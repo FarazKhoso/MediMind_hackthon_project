@@ -10,7 +10,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -23,47 +22,64 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useAuth, useFirestore } from '@/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().min(2, 'Name is required.'),
   email: z.string().email('Invalid email address.'),
   password: z.string().min(6, 'Password must be at least 6 characters.'),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
-export default function LoginPage() {
+export default function RegisterPatientPage() {
   const [loading, setLoading] = useState(false);
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: '',
       email: '',
       password: '',
     },
   });
 
-  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+  const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome back!',
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      const user = userCredential.user;
+
+      const userProfileRef = doc(firestore, 'users', user.uid);
+      await setDoc(userProfileRef, {
+        name: data.name,
+        email: data.email,
+        role: 'customer',
       });
-      router.push('/'); // Redirect to home page after login
+
+      toast({
+        title: 'Registration Successful',
+        description: 'Your patient account has been created.',
+      });
+      router.push('/login');
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Registration Failed',
         description: error.message || 'An unexpected error occurred.',
       });
     }
@@ -71,20 +87,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 py-12">
+      <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-                <Logo />
-            </div>
-          <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
+          <div className="mx-auto mb-4">
+            <Logo />
+          </div>
+          <CardTitle className="text-2xl font-headline">Create Your Account</CardTitle>
           <CardDescription>
-            Login to your MediMind AI account.
+            Get access to AI-powered health services.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+               <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ali Khan" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               <FormField
                 control={form.control}
                 name="email"
@@ -92,11 +121,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        {...field}
-                      />
+                      <Input type="email" placeholder="you@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -117,20 +142,17 @@ export default function LoginPage() {
               />
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Login
+                Create Patient Account
               </Button>
             </form>
           </Form>
+           <p className="text-center text-sm text-muted-foreground mt-6">
+            Are you a health provider?{' '}
+            <a href="/register" className="font-semibold text-primary hover:underline">
+              Register here
+            </a>
+          </p>
         </CardContent>
-        <CardFooter className="flex-col gap-4">
-            <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?
-            </p>
-            <div className="grid grid-cols-2 gap-4 w-full">
-                <Button variant="outline" onClick={() => router.push('/register/patient')}>Register as Patient</Button>
-                <Button variant="outline" onClick={() => router.push('/register')}>Register as Provider</Button>
-            </div>
-        </CardFooter>
       </Card>
     </div>
   );

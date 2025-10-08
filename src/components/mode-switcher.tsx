@@ -10,8 +10,9 @@ export function ModeSwitcher() {
   const { mode, setMode, isProvider } = useAppMode();
   const { user, isUserLoading } = useUser();
 
-  // Don't show switcher if not logged in, or if user is still loading, or if user is not a provider.
-  if (isUserLoading || !user || user.isAnonymous || !isProvider) {
+  // Don't show switcher for providers, as they are locked into provider mode.
+  // Also hide while loading or if logged out.
+  if (isUserLoading || !user || user.isAnonymous || isProvider) {
     return null;
   }
 
@@ -20,6 +21,8 @@ export function ModeSwitcher() {
     setMode(newMode);
   };
 
+  // This component will now effectively only be shown to non-provider users (e.g. admins in future)
+  // who might have dual roles. For now, it will be mostly hidden for all roles.
   return (
     <div className="p-2 border-t">
       <Button variant="outline" className="w-full justify-start" onClick={handleSwitchMode}>
