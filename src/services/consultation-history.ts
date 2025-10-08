@@ -9,7 +9,6 @@ import {
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useFirestore } from '@/firebase';
 
 interface ConsultationLog {
   userId: string;
@@ -41,18 +40,16 @@ export function logConsultation(db: Firestore, log: ConsultationLog) {
   
   addDoc(collectionRef, logWithTimestamp)
     .catch(error => {
-      // PERMANENT FIX: Instead of throwing an error that crashes the app,
-      // we will log it silently. This stops the recurrent crash on write operations.
-      console.warn(`Firestore permission error on creating consultation log. Silently failing. Details:`, error.message);
-      
-      // The error emitter is removed to prevent the global error handler from catching this.
-      // errorEmitter.emit(
-      //   'permission-error',
-      //   new FirestorePermissionError({
-      //     path: collectionRef.path,
-      //     operation: 'create',
-      //     requestResourceData: logWithTimestamp,
-      //   })
-      // )
+      // Instead of silently failing, we now emit a detailed, contextual error
+      // which will be caught by the global error handler. This helps in debugging
+      // security rules by providing a clear view of the failed request.
+      errorEmitter.emit(
+        'permission-error',
+        new FirestorePermissionError({
+          path: collectionRef.path,
+          operation: 'create',
+          requestResourceData: logWithTimestamp,
+        })
+      )
     });
 }
