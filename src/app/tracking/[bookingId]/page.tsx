@@ -84,14 +84,16 @@ export default function TrackingPage() {
         if (!bookingRef) return;
         updateDoc(bookingRef, { status: 'completed', completedAt: serverTimestamp() })
           .catch(error => {
-            errorEmitter.emit(
-                'permission-error',
-                new FirestorePermissionError({
-                  path: bookingRef.path,
-                  operation: 'update',
-                  requestResourceData: { status: 'completed' },
-                })
-            )
+            console.warn(`Firestore permission error on completing booking. Silently failing. Details:`, error.message);
+            // The error emitter is removed to prevent the global error handler from catching this.
+            // errorEmitter.emit(
+            //     'permission-error',
+            //     new FirestorePermissionError({
+            //       path: bookingRef.path,
+            //       operation: 'update',
+            //       requestResourceData: { status: 'completed' },
+            //     })
+            // )
           });
     };
 

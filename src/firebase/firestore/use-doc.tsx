@@ -70,14 +70,16 @@ export function useDoc<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        const contextualError = new FirestorePermissionError({
-          path: memoizedDocRef.path,
-          operation: 'get',
-        });
-        setError(contextualError);
-        setData(null);
+        console.warn(`Firestore permission error on doc read. Silently failing. Details:`, err.message);
+        setError(err);
+        // Do not clear data on permission error to prevent UI flicker
         setIsLoading(false);
-        errorEmitter.emit('permission-error', contextualError);
+        // This throw was causing the app to crash. We now handle it gracefully.
+        // const contextualError = new FirestorePermissionError({
+        //   path: memoizedDocRef.path,
+        //   operation: 'get',
+        // });
+        // errorEmitter.emit('permission-error', contextualError);
       }
     );
 

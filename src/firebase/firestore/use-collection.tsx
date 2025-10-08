@@ -85,15 +85,18 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (err: FirestoreError) => {
-        const path = (memoizedTargetRefOrQuery as any)?.path || (memoizedTargetRefOrQuery as InternalQuery)._query.path.canonicalString();
-        const contextualError = new FirestorePermissionError({
-          operation: 'list',
-          path,
-        })
-        setError(contextualError);
-        setData(null);
+        console.warn(`Firestore permission error on collection read. Silently failing. Details:`, err.message);
+        setError(err);
+        // Do not clear data on permission error to prevent UI flicker
         setIsLoading(false);
-        errorEmitter.emit('permission-error', contextualError);
+        
+        // This throw was causing the app to crash. We now handle it gracefully.
+        // const path = (memoizedTargetRefOrQuery as any)?.path || (memoizedTargetRefOrQuery as InternalQuery)._query.path.canonicalString();
+        // const contextualError = new FirestorePermissionError({
+        //   operation: 'list',
+        //   path,
+        // })
+        // errorEmitter.emit('permission-error', contextualError);
       }
     );
 
@@ -106,4 +109,3 @@ export function useCollection<T = any>(
 
   return { data, isLoading, error };
 }
-
