@@ -15,6 +15,8 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
@@ -35,49 +37,58 @@ export default function ProviderDashboard() {
   const handleAccept = async (bookingId: string) => {
     if (!user || !firestore) return;
     setUpdatingId(bookingId);
-    try {
-      const bookingRef = doc(firestore, 'bookings', bookingId);
-      await updateDoc(bookingRef, {
-        status: 'accepted',
-        providerId: user.uid,
+    
+    const bookingRef = doc(firestore, 'bookings', bookingId);
+    const updateData = {
+      status: 'accepted',
+      providerId: user.uid,
+    };
+
+    updateDoc(bookingRef, updateData)
+      .then(() => {
+        toast({
+          title: 'Request Accepted!',
+          description: 'The booking has been moved to your "My Bookings" section.',
+        });
+        router.push(`/tracking/${bookingId}`);
+      })
+      .catch((e: any) => {
+        const permissionError = new FirestorePermissionError({
+          path: bookingRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        console.error("Failed to accept booking:", e);
+      })
+      .finally(() => {
+        setUpdatingId(null);
       });
-      toast({
-        title: 'Request Accepted!',
-        description: 'The booking has been moved to your "My Bookings" section.',
-      });
-      router.push(`/tracking/${bookingId}`);
-    } catch (e: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error Accepting Request',
-        description: e.message || 'Could not accept the booking. Please check permissions.',
-      });
-      console.error("Failed to accept booking:", e);
-    }
-    setUpdatingId(null);
   };
 
   const handleDecline = async (bookingId: string) => {
     if (!firestore) return;
     setUpdatingId(bookingId);
-    try {
-        const bookingRef = doc(firestore, 'bookings', bookingId);
-        // Instead of deleting, we can mark it as declined or some other status
-        // For now, we'll delete it to remove it from the queue.
-        await deleteDoc(bookingRef);
-        toast({
-            title: 'Request Declined',
-            description: 'The booking request has been removed.',
+    const bookingRef = doc(firestore, 'bookings', bookingId);
+    
+    deleteDoc(bookingRef)
+        .then(() => {
+            toast({
+                title: 'Request Declined',
+                description: 'The booking request has been removed.',
+            });
+        })
+        .catch((e: any) => {
+            const permissionError = new FirestorePermissionError({
+                path: bookingRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            console.error("Failed to decline booking:", e);
+        })
+        .finally(() => {
+            setUpdatingId(null);
         });
-    } catch (e: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Error Declining Request',
-            description: e.message || 'Could not decline the booking.',
-        });
-        console.error("Failed to decline booking:", e);
-    }
-    setUpdatingId(null);
   }
   
   const handleNavigateToChat = (bookingId: string) => {
