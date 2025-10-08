@@ -19,13 +19,13 @@ export default function MyBookingsPage() {
   const router = useRouter();
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (!firestore || !user?.uid) return null;
     return query(
       collection(firestore, 'bookings'),
       where('customerId', '==', user.uid),
       orderBy('createdAt', 'desc')
     );
-  }, [firestore, user]);
+  }, [firestore, user?.uid]);
 
   const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsQuery);
 
