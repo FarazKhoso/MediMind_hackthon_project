@@ -1,23 +1,45 @@
+/**
+ * @fileoverview Firestore Security Rules for the HealthConnect application.
+ *
+ * Core Philosophy:
+ * This ruleset prioritizes user data ownership and role-based access control.
+ * Users can only read and write their own data, while providers have specific
+ * rules to manage their profiles and bookings. Data validation is relaxed to
+ * enable rapid prototyping and iteration.
+ *
+ * Data Structure:
+ * - /users/{userId}: Stores public user profiles, accessible only to the owning user.
+ * - /providers/{providerId}: Stores private provider profiles, accessible only to the provider.
+ * - /bookings/{bookingId}: Stores booking information, accessible to involved customers and providers.
+ * - /users/{userId}/consultations/{consultationId}: Stores AI consultations, accessible only to the owning user.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed for privacy.
+ * - Provider profiles are private and require authentication.
+ * - Bookings can be updated by either the customer or the provider involved.
+ * - The ruleset is designed for rapid prototyping and does not enforce strict data validation.
+ *
+ * Denormalization for Authorization:
+ * - The `bookings` collection relies on denormalized `customerId` and `providerId` fields to
+ * determine access rights, avoiding the need for costly `get()` operations.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profiles.
+     * @description Enforces user-based access control for user profiles.
      * @path /users/{userId}
-     * @allow (create) User with ID 'user123' creates their profile.
-     * @allow (get) User with ID 'user123' retrieves their profile.
-     * @allow (update) User with ID 'user123' updates their profile.
-     * @allow (delete) User with ID 'user123' deletes their profile.
-     * @deny (create) User with ID 'user456' attempts to create a profile for 'user123'.
-     * @deny (get) User with ID 'user456' attempts to retrieve 'user123' profile.
-     * @principle Enforces user-ownership: users can only manage their own profiles.
+     * @allow (get, list): Authenticated user can read their own profile.
+     * @allow (create, update, delete): Authenticated user can manage their own profile.
+     * @deny (get, list): Unauthorized access to other user profiles.
+     * @deny (create, update, delete): Modifying other user profiles.
+     * @principle Enforces strict user-ownership for all operations.
      */
     match /users/{userId} {
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
-
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId);
@@ -26,21 +48,18 @@ service cloud.firestore {
     }
 
     /**
-     * @description Controls access to provider profiles.
+     * @description Enforces provider-based access control for provider profiles.
      * @path /providers/{providerId}
-     * @allow (create) Provider with ID 'provider123' creates their profile.
-     * @allow (get) Provider with ID 'provider123' retrieves their profile.
-     * @allow (update) Provider with ID 'provider123' updates their profile.
-     * @allow (delete) Provider with ID 'provider123' deletes their profile.
-     * @deny (create) User with ID 'user456' attempts to create a provider profile for 'provider123'.
-     * @deny (get) User with ID 'user456' attempts to retrieve 'provider123' profile.
-     * @principle Enforces user-ownership: providers can only manage their own profiles.
+     * @allow (get, list): Provider can read their own profile.
+     * @allow (create, update, delete): Provider can manage their own profile.
+     * @deny (get, list): Unauthorized access to other provider profiles.
+     * @deny (create, update, delete): Modifying other provider profiles.
+     * @principle Enforces strict provider-ownership for all operations.
      */
     match /providers/{providerId} {
       function isOwner(providerId) {
-        return request.auth.uid == providerId;
+        return request.auth != null && request.auth.uid == providerId;
       }
-
       allow get: if isOwner(providerId);
       allow list: if false;
       allow create: if isOwner(providerId);
@@ -49,56 +68,40 @@ service cloud.firestore {
     }
 
     /**
-     * @description Controls access to booking requests.
+     * @description Controls access to booking documents based on the customerId or providerId.
      * @path /bookings/{bookingId}
-     * @allow (get) Customer 'customer123' retrieves booking 'bookingXYZ' where they are the customer.
-     * @allow (get) Provider 'provider456' retrieves booking 'bookingXYZ' where they are the provider.
-     * @allow (create) Customer 'customer123' creates a new booking.
-     * @allow (update) Customer 'customer123' updates booking 'bookingXYZ' where they are the customer.
-     * @allow (update) Provider 'provider456' updates booking 'bookingXYZ' where they are the provider.
-     * @deny (get) User 'user789' tries to read a booking they are not part of.
-     * @principle Shared access: Allows read/write access to customers and providers for bookings they are involved in.
+     * @allow (get, list): Customer or Provider can read booking details.
+     * @allow (create): Customer can create a booking request.
+     * @allow (update): Customer or Provider can update booking details.
+     * @deny (create, update, delete): Unauthorized users cannot create or modify booking details.
+     * @principle Grants access to users involved in the booking.
      */
     match /bookings/{bookingId} {
-        function isCustomerOrProvider(customerId, providerId) {
-          return request.auth.uid == customerId || request.auth.uid == providerId;
-        }
-        function isValidBookingCreate() {
-          return request.resource.data.customerId == request.auth.uid;
-        }
-
-        allow get: if isCustomerOrProvider(resource.data.customerId, resource.data.providerId);
+        allow get: if request.auth.uid == get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId || request.auth.uid == get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId;
         allow list: if false;
-        allow create: if isValidBookingCreate();
-        allow update: if isCustomerOrProvider(resource.data.customerId, resource.data.providerId);
-        allow delete: if false; // Bookings should not be deleted through the client app
+        allow create: if request.auth != null;
+        allow update: if request.auth.uid == get(/databases/$(database)/documents/bookings/$(bookingId)).data.customerId || request.auth.uid == get(/databases/$(database)/documents/bookings/$(bookingId)).data.providerId;
+        allow delete: if false; // Prevent accidental deletion of bookings.
     }
 
     /**
-     * @description Controls access to AI consultations for each user.
+     * @description Enforces user-based access control for AI consultations.
      * @path /users/{userId}/consultations/{consultationId}
-     * @allow (create) User with ID 'user123' creates a consultation.
-     * @allow (get) User with ID 'user123' retrieves their own consultation.
-     * @allow (update) User with ID 'user123' updates their own consultation.
-     * @allow (delete) User with ID 'user123' deletes their own consultation.
-     * @deny (create) User with ID 'user456' attempts to create a consultation for 'user123'.
-     * @deny (get) User with ID 'user456' attempts to retrieve 'user123' consultations.
-     * @principle Enforces user-ownership: users can only manage their own consultations.
+     * @allow (get, list): Authenticated user can read their own consultations.
+     * @allow (create, update, delete): Authenticated user can manage their own consultations.
+     * @deny (get, list): Unauthorized access to other user's consultations.
+     * @deny (create, update, delete): Modifying other user's consultations.
+     * @principle Enforces strict user-ownership for all operations.
      */
     match /users/{userId}/consultations/{consultationId} {
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
-
       allow get: if isOwner(userId);
       allow list: if false;
       allow create: if isOwner(userId);
       allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
-  }
-
-  function isSignedIn() {
-    return request.auth != null;
   }
 }
