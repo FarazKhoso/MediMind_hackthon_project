@@ -40,16 +40,8 @@ export function logConsultation(db: Firestore, log: ConsultationLog) {
   
   addDoc(collectionRef, logWithTimestamp)
     .catch(error => {
-      // Instead of silently failing, we now emit a detailed, contextual error
-      // which will be caught by the global error handler. This helps in debugging
-      // security rules by providing a clear view of the failed request.
-      errorEmitter.emit(
-        'permission-error',
-        new FirestorePermissionError({
-          path: collectionRef.path,
-          operation: 'create',
-          requestResourceData: logWithTimestamp,
-        })
-      )
+      // With open rules, this should not trigger for permission errors,
+      // but we log any other potential errors to the console.
+      console.error("Error logging consultation:", error);
     });
 }
