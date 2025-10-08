@@ -3,6 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import { useUser } from '@/firebase';
+import { useRouter, usePathname } from 'next/navigation';
 
 export type AppMode = 'patient' | 'provider';
 
@@ -16,12 +17,13 @@ const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
 export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   const { userProfile, isUserLoading, user } = useUser();
-  const [mode, setMode] = useState<AppMode>('patient'); // Default to patient mode
+  const [mode, setMode] = useState<AppMode>('patient');
+  const router = useRouter();
+  const pathname = usePathname();
 
   const isProviderRole = userProfile?.role === 'provider';
 
   useEffect(() => {
-    // If a non-anonymous user is logged in, their role dictates the mode.
     if (user && !user.isAnonymous && !isUserLoading && userProfile) {
       const userMode = isProviderRole ? 'provider' : 'patient';
       if (mode !== userMode) {
@@ -31,19 +33,21 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   }, [user, isUserLoading, userProfile, isProviderRole, mode]);
 
   const setModeHandler = (newMode: AppMode) => {
-    // A logged-in (non-anonymous) user cannot switch modes. Their role defines their mode.
     if (user && !user.isAnonymous) {
       console.warn("Cannot switch modes while logged in. Mode is determined by user role.");
       return;
     }
     setMode(newMode);
+    // Force a reload to ensure the entire UI context switches correctly
+    router.push(pathname);
+    router.refresh();
   };
   
   const contextValue = useMemo(() => ({
     mode,
     setMode: setModeHandler,
     isProviderRole: isProviderRole,
-  }), [mode, user, isProviderRole]); // Add user to dependency array
+  }), [mode, user, isProviderRole]);
 
   return (
     <AppModeContext.Provider value={contextValue}>

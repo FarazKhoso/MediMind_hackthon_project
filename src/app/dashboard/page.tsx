@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,19 +14,21 @@ import { useRouter } from 'next/navigation';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
   const firestore = useFirestore();
   const router = useRouter();
   const { mode } = useAppMode();
+  const { toast } = useToast();
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user || user.isAnonymous) return null;
     return query(collection(firestore, 'bookings'), where('status', '==', 'requested'));
   }, [firestore, user]);
     
-  const { data: bookingRequests, isLoading: bookingsLoading } = useCollection(bookingsQuery);
+  const { data: bookingRequests, isLoading: bookingsLoading, error } = useCollection(bookingsQuery);
   
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -39,12 +41,44 @@ export default function ProviderDashboard() {
         status: 'accepted',
         providerId: user.uid,
       });
+      toast({
+        title: 'Request Accepted!',
+        description: 'The booking has been moved to your "My Bookings" section.',
+      });
       router.push(`/tracking/${bookingId}`);
-    } catch (e) {
+    } catch (e: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error Accepting Request',
+        description: e.message || 'Could not accept the booking. Please check permissions.',
+      });
       console.error("Failed to accept booking:", e);
     }
     setUpdatingId(null);
   };
+
+  const handleDecline = async (bookingId: string) => {
+    if (!firestore) return;
+    setUpdatingId(bookingId);
+    try {
+        const bookingRef = doc(firestore, 'bookings', bookingId);
+        // Instead of deleting, we can mark it as declined or some other status
+        // For now, we'll delete it to remove it from the queue.
+        await deleteDoc(bookingRef);
+        toast({
+            title: 'Request Declined',
+            description: 'The booking request has been removed.',
+        });
+    } catch (e: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Error Declining Request',
+            description: e.message || 'Could not decline the booking.',
+        });
+        console.error("Failed to decline booking:", e);
+    }
+    setUpdatingId(null);
+  }
   
   const handleNavigateToChat = (bookingId: string) => {
     router.push(`/tracking/${bookingId}`);
@@ -66,7 +100,7 @@ export default function ProviderDashboard() {
                     <ShieldAlert className="h-4 w-4" />
                     <AlertTitle>Access Denied</AlertTitle>
                     <AlertDescription>
-                        This dashboard is for registered health providers only. Please <a href="/login" className="font-bold underline">log in</a> or switch to provider mode.
+                        This dashboard is for registered health providers only. Please <a href="/login" className="font-bold underline">log in</a> as a provider.
                     </AlertDescription>
                 </Alert>
             </main>
@@ -83,6 +117,16 @@ export default function ProviderDashboard() {
       <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">
           {bookingsLoading && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin h-6 w-6 text-primary" /></div>}
+          
+          {error && (
+             <Alert variant="destructive">
+                <ShieldAlert className="h-4 w-4" />
+                <AlertTitle>Permission Error</AlertTitle>
+                <AlertDescription>
+                    Could not load booking requests. Please ensure you have the correct permissions.
+                </AlertDescription>
+            </Alert>
+          )}
 
           {bookingRequests && bookingRequests.length === 0 && !bookingsLoading && (
             <div className="text-center py-16">
@@ -128,7 +172,14 @@ export default function ProviderDashboard() {
                                 {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
                             </Button>
                             <Button variant="outline" onClick={() => handleNavigateToChat(booking.id)}>Negotiate</Button>
-                            <Button variant="ghost" className="text-red-500 hover:bg-red-50 hover:text-red-600">Decline</Button>
+                            <Button 
+                              variant="ghost" 
+                              className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                              onClick={() => handleDecline(booking.id)}
+                              disabled={updatingId === booking.id}
+                            >
+                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
+                            </Button>
                         </div>
                     </div>
                 </CardContent>
