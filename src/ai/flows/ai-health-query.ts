@@ -1,3 +1,4 @@
+
 // src/ai/flows/ai-health-query.ts
 'use server';
 
@@ -18,9 +19,9 @@ const AIHealthQueryInputSchema = z.object({
 export type AIHealthQueryInput = z.infer<typeof AIHealthQueryInputSchema>;
 
 const AIHealthQueryOutputSchema = z.object({
-  insights: z.string().describe('Potential insights related to the query.'),
-  riskFactors: z.string().describe('Potential risk factors related to the query.'),
-  nextSteps: z.string().describe('Possible next steps based on the query.'),
+  insights: z.string().describe('Potential insights related to the query. "N/A" if the query is not health-related.'),
+  riskFactors: z.string().describe('Potential risk factors related to the query. "N/A" if the query is not health-related.'),
+  nextSteps: z.string().describe('Possible next steps based on the query. "N/A" if the query is not health-related.'),
   confidenceScore: z.number().describe('Confidence score of the AI response (0-1).'),
   handoffRequired: z.boolean().describe('Indicates if a handoff to a doctor is required.'),
 });
@@ -34,17 +35,20 @@ const prompt = ai.definePrompt({
   name: 'aiHealthQueryPrompt',
   input: {schema: AIHealthQueryInputSchema},
   output: {schema: AIHealthQueryOutputSchema},
-  prompt: `You are an AI health assistant. Your primary language for responding is Roman Urdu. Provide insights, risk factors, and next steps based on user queries in Roman Urdu.
+  prompt: `You are a sophisticated medical AI assistant. Your primary function is to provide health-related information. You must adhere to the following rules:
 
-  Query: {{{query}}}
+1.  **Language Detection**: First, detect the language of the user's query. It will be either English or Roman Urdu. You MUST respond in the same language.
+2.  **Health-Related Guardrail**: Analyze the query to determine if it is health-related.
+    *   **If the query IS health-related**: Provide insights, potential risk factors, and possible next steps in a structured format in the user's language.
+    *   **If the query IS NOT health-related**: You MUST politely decline.
+        *   If the query was in English, respond with: "I am a medical AI assistant and can only answer health-related questions."
+        *   If the query was in Roman Urdu, respond with: "Main ek medical AI assistant hoon aur sirf sehat se mutalliq sawalon ke jawab de sakta hoon."
+        *   In this case, set the 'insights', 'riskFactors', and 'nextSteps' fields in your output to "N/A".
 
-  Provide your response in Roman Urdu in a structured format, including insights, risk factors, and possible next steps. Also, provide a confidence score (0-1) for your response and indicate if a handoff to a doctor is required.
+3.  **Confidence & Handoff**: For all health-related queries, provide a confidence score (0-1) and determine if a handoff to a human doctor is required. For non-health queries, set confidence to 0 and handoff to false.
 
-  Insights:
-  Risk Factors:
-  Next Steps:
-  Confidence Score:
-  Handoff Required: `,
+User Query: {{{query}}}
+`,
   config: {
     safetySettings: [
       {
