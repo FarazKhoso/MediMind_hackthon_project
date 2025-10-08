@@ -32,11 +32,12 @@ export default function ProviderDashboard() {
     
   const { data: bookingRequests, isLoading: bookingsLoading, error } = useCollection(bookingsQuery);
   
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
 
   const handleAccept = async (bookingId: string) => {
     if (!user || !firestore) return;
-    setUpdatingId(bookingId);
+    setAcceptingId(bookingId);
     
     const bookingRef = doc(firestore, 'bookings', bookingId);
     const updateData = {
@@ -62,13 +63,13 @@ export default function ProviderDashboard() {
         console.error("Failed to accept booking:", e);
       })
       .finally(() => {
-        setUpdatingId(null);
+        setAcceptingId(null);
       });
   };
 
   const handleDecline = async (bookingId: string) => {
     if (!firestore) return;
-    setUpdatingId(bookingId);
+    setDecliningId(bookingId);
     const bookingRef = doc(firestore, 'bookings', bookingId);
     
     deleteDoc(bookingRef)
@@ -87,7 +88,7 @@ export default function ProviderDashboard() {
             console.error("Failed to decline booking:", e);
         })
         .finally(() => {
-            setUpdatingId(null);
+            setDecliningId(null);
         });
   }
   
@@ -119,6 +120,8 @@ export default function ProviderDashboard() {
     );
   }
 
+  const showPermissionError = error && (!bookingRequests || bookingRequests.length === 0);
+
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
@@ -129,7 +132,7 @@ export default function ProviderDashboard() {
         <div className="max-w-2xl mx-auto space-y-4">
           {bookingsLoading && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin h-6 w-6 text-primary" /></div>}
           
-          {error && (
+          {showPermissionError && (
              <Alert variant="destructive">
                 <ShieldAlert className="h-4 w-4" />
                 <AlertTitle>Permission Error</AlertTitle>
@@ -177,19 +180,19 @@ export default function ProviderDashboard() {
                         <div className="grid grid-cols-3 gap-2">
                             <Button 
                                 onClick={() => handleAccept(booking.id)}
-                                disabled={updatingId === booking.id}
+                                disabled={acceptingId === booking.id || decliningId === booking.id}
                                 className="bg-green-500 hover:bg-green-600"
                             >
-                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
+                                {acceptingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
                             </Button>
                             <Button variant="outline" onClick={() => handleNavigateToChat(booking.id)}>Negotiate</Button>
                             <Button 
                               variant="ghost" 
                               className="text-red-500 hover:bg-red-50 hover:text-red-600"
                               onClick={() => handleDecline(booking.id)}
-                              disabled={updatingId === booking.id}
+                              disabled={acceptingId === booking.id || decliningId === booking.id}
                             >
-                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
+                                {decliningId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
                             </Button>
                         </div>
                     </div>
@@ -201,3 +204,5 @@ export default function ProviderDashboard() {
     </div>
   );
 }
+
+    
