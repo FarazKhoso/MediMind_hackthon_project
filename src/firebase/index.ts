@@ -15,14 +15,13 @@ export function initializeFirebase() {
   const auth = getAuth(app);
   const firestore = getFirestore(app);
 
-  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-    // Check if emulators are already running to avoid re-connecting
-    // This is a simplified check; more robust implementations might be needed
+  // NOTE: This is a workaround for the demo environment to ensure emulators are always used.
+  if (typeof window !== 'undefined') {
     // @ts-ignore
     if (!auth.emulatorConfig) {
       connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
     }
-     // @ts-ignore
+    // @ts-ignore
     if (!firestore.emulatorConfig) {
       connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
     }
