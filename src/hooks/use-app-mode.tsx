@@ -9,51 +9,41 @@ export type AppMode = 'patient' | 'provider';
 interface AppModeContextType {
   mode: AppMode;
   setMode: (mode: AppMode) => void;
-  isProvider: boolean;
+  isProviderRole: boolean; // Renamed for clarity
 }
 
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
 export const AppModeProvider = ({ children }: { children: ReactNode }) => {
-  const { userProfile, isUserProfileLoading, user } = useUser();
-  const isProvider = userProfile?.role === 'provider';
+  const { userProfile, isUserLoading, user } = useUser();
+  const [mode, setMode] = useState<AppMode>('patient'); // Default to patient mode
 
-  // Default to patient, but switch to provider if the user's role is provider.
-  const [mode, setModeState] = useState<AppMode>('patient');
+  const isProviderRole = userProfile?.role === 'provider';
 
   useEffect(() => {
-    // When user profile is loaded, set the mode based on the role.
-    if (!isUserProfileLoading && user) {
-      if (isProvider) {
-        setModeState('provider');
-      } else {
-        setModeState('patient');
+    // If user is logged in, their role dictates the mode.
+    if (user && !isUserLoading && userProfile) {
+      const userMode = isProviderRole ? 'provider' : 'patient';
+      if (mode !== userMode) {
+        setMode(userMode);
       }
-    } else if (!user) {
-        // If user logs out, default to patient mode
-        setModeState('patient');
     }
-  }, [isProvider, isUserProfileLoading, user]);
-  
-  const setMode = (newMode: AppMode) => {
-    // Prevent a non-provider from ever switching to provider mode.
-    if (newMode === 'provider' && !isProvider) {
-      console.warn("Attempted to switch to provider mode without provider role. Denied.");
-      return;
-    }
-     // Prevent a provider from switching to patient mode.
-    if (newMode === 'patient' && isProvider) {
-      console.warn("A provider cannot switch to patient mode. Denied.");
-      return;
-    }
-    setModeState(newMode);
-  };
+  }, [user, isUserLoading, userProfile, isProviderRole, mode]);
 
+  const setModeHandler = (newMode: AppMode) => {
+    // A logged-in user cannot switch modes. Their role defines their mode.
+    if (user && !user.isAnonymous) {
+      console.warn("Cannot switch modes while logged in. Mode is determined by user role.");
+      return;
+    }
+    setMode(newMode);
+  };
+  
   const contextValue = useMemo(() => ({
     mode,
-    setMode,
-    isProvider,
-  }), [mode, isProvider]);
+    setMode: setModeHandler,
+    isProviderRole: isProviderRole,
+  }), [mode, isProviderRole]);
 
   return (
     <AppModeContext.Provider value={contextValue}>

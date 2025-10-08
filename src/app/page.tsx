@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAppMode } from '@/hooks/use-app-mode';
@@ -8,7 +9,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function Home() {
   const { mode } = useAppMode();
-  const { isUserLoading } = useUser();
+  const { user, isUserLoading, userProfile } = useUser();
 
   if (isUserLoading) {
     return (
@@ -18,6 +19,15 @@ export default function Home() {
     );
   }
 
+  // If a user is logged in, their role dictates the view.
+  if (user && userProfile) {
+    if (userProfile.role === 'provider') {
+        return <ProviderDashboard />;
+    }
+    return <SymptomCheckerPage />;
+  }
+
+  // If not logged in, the view is based on the selected mode.
   if (mode === 'provider') {
     return <ProviderDashboard />;
   }

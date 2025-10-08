@@ -93,10 +93,61 @@ const ProviderMenu = () => (
     </>
 );
 
+
+const AuthMenu = ({ mode }: { mode: 'patient' | 'provider' }) => {
+    if (mode === 'provider') {
+        return (
+            <>
+                <SidebarMenuItem>
+                    <Link href="/login">
+                        <SidebarMenuButton tooltip="Login as Provider">
+                            <LogIn />
+                            <span>Provider Login</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                    <Link href="/register">
+                        <SidebarMenuButton tooltip="Register as Provider">
+                            <UserPlus />
+                            <span>Register as Provider</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </>
+        )
+    }
+
+    return (
+        <>
+            <SidebarMenuItem>
+                <Link href="/login">
+                    <SidebarMenuButton tooltip="Login">
+                        <LogIn />
+                        <span>Login</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+                <Link href="/register/patient">
+                    <SidebarMenuButton tooltip="Register as Patient">
+                        <UserPlus />
+                        <span>Register as Patient</span>
+                    </SidebarMenuButton>
+                </Link>
+            </SidebarMenuItem>
+        </>
+    );
+};
+
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const { user, userProfile } = useUser();
     const auth = useAuth();
-    const { mode } = useAppMode();
+    const { mode, isProviderRole } = useAppMode();
+    
+    // Determine which menu to show based on login status and role
+    const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
     return (
         <SidebarProvider>
@@ -107,30 +158,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     </SidebarHeader>
                     
                     <SidebarMenu className="flex-1">
-                        {mode === 'patient' ? <PatientMenu /> : <ProviderMenu />}
+                        {showProviderMenu ? <ProviderMenu /> : <PatientMenu />}
                     </SidebarMenu>
 
                     <SidebarFooter>
                         <SidebarMenu>
                             {!user || user.isAnonymous ? (
-                                <>
-                                    <SidebarMenuItem>
-                                        <Link href="/login">
-                                            <SidebarMenuButton tooltip="Login">
-                                                <LogIn />
-                                                <span>Login</span>
-                                            </SidebarMenuButton>
-                                        </Link>
-                                    </SidebarMenuItem>
-                                    <SidebarMenuItem>
-                                        <Link href="/register/patient">
-                                            <SidebarMenuButton tooltip="Register as Patient">
-                                                <UserPlus />
-                                                <span>Register as Patient</span>
-                                            </SidebarMenuButton>
-                                        </Link>
-                                    </SidebarMenuItem>
-                                </>
+                                <AuthMenu mode={mode} />
                             ) : (
                                 <SidebarMenuItem>
                                     <SidebarMenuButton tooltip="Logout" onClick={() => signOut(auth)}>

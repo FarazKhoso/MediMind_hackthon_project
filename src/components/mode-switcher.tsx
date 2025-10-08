@@ -7,12 +7,12 @@ import { Repeat } from 'lucide-react';
 import { useUser } from '@/firebase';
 
 export function ModeSwitcher() {
-  const { mode, setMode, isProvider } = useAppMode();
+  const { mode, setMode } = useAppMode();
   const { user, isUserLoading } = useUser();
 
-  // Don't show switcher for providers, as they are locked into provider mode.
-  // Also hide while loading or if logged out.
-  if (isUserLoading || !user || user.isAnonymous || isProvider) {
+  // Hide the switcher if the user is loading or already logged in.
+  // A logged-in user's mode is fixed by their role.
+  if (isUserLoading || (user && !user.isAnonymous)) {
     return null;
   }
 
@@ -21,13 +21,11 @@ export function ModeSwitcher() {
     setMode(newMode);
   };
 
-  // This component will now effectively only be shown to non-provider users (e.g. admins in future)
-  // who might have dual roles. For now, it will be mostly hidden for all roles.
   return (
     <div className="p-2 border-t">
       <Button variant="outline" className="w-full justify-start" onClick={handleSwitchMode}>
         <Repeat className="mr-2 h-4 w-4" />
-        <span>Switch to {mode === 'patient' ? 'Provider' : 'Patient'}</span>
+        <span>Switch to {mode === 'patient' ? 'Provider' : 'Patient'} View</span>
       </Button>
     </div>
   );
