@@ -15,6 +15,8 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
@@ -30,12 +32,11 @@ export default function ProviderDashboard() {
     
   const { data: bookingRequests, isLoading: bookingsLoading, error } = useCollection(bookingsQuery);
   
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
-  const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleAccept = async (bookingId: string) => {
     if (!user || !firestore) return;
-    setAcceptingId(bookingId);
+    setUpdatingId(bookingId);
     
     const bookingRef = doc(firestore, 'bookings', bookingId);
     const updateData = {
@@ -52,21 +53,21 @@ export default function ProviderDashboard() {
         router.push(`/tracking/${bookingId}`);
       })
       .catch((e: any) => {
-        console.error("Failed to accept booking:", e);
-        toast({
-          variant: 'destructive',
-          title: 'Update Failed',
-          description: 'Could not accept booking. Check console for details.'
+        const permissionError = new FirestorePermissionError({
+          path: bookingRef.path,
+          operation: 'update',
+          requestResourceData: updateData,
         });
+        errorEmitter.emit('permission-error', permissionError);
       })
       .finally(() => {
-        setAcceptingId(null);
+        setUpdatingId(null);
       });
   };
 
   const handleDecline = async (bookingId: string) => {
     if (!firestore) return;
-    setDecliningId(bookingId);
+    setUpdatingId(bookingId);
     const bookingRef = doc(firestore, 'bookings', bookingId);
     
     deleteDoc(bookingRef)
@@ -77,15 +78,14 @@ export default function ProviderDashboard() {
             });
         })
         .catch((e: any) => {
-            console.error("Failed to decline booking:", e);
-            toast({
-              variant: 'destructive',
-              title: 'Decline Failed',
-              description: 'Could not decline booking. Check console for details.'
+            const permissionError = new FirestorePermissionError({
+                path: bookingRef.path,
+                operation: 'delete',
             });
+            errorEmitter.emit('permission-error', permissionError);
         })
         .finally(() => {
-            setDecliningId(null);
+            setUpdatingId(null);
         });
   }
   
@@ -177,19 +177,19 @@ export default function ProviderDashboard() {
                         <div className="grid grid-cols-3 gap-2">
                             <Button 
                                 onClick={() => handleAccept(booking.id)}
-                                disabled={acceptingId === booking.id || decliningId === booking.id}
+                                disabled={updatingId === booking.id}
                                 className="bg-green-500 hover:bg-green-600"
                             >
-                                {acceptingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
+                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
                             </Button>
                             <Button variant="outline" onClick={() => handleNavigateToChat(booking.id)}>Negotiate</Button>
                             <Button 
                               variant="ghost" 
                               className="text-red-500 hover:bg-red-50 hover:text-red-600"
                               onClick={() => handleDecline(booking.id)}
-                              disabled={acceptingId === booking.id || decliningId === booking.id}
+                              disabled={updatingId === booking.id}
                             >
-                                {decliningId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
+                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
                             </Button>
                         </div>
                     </div>
@@ -201,5 +201,3 @@ export default function ProviderDashboard() {
     </div>
   );
 }
-
-    
