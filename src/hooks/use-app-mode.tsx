@@ -9,7 +9,7 @@ export type AppMode = 'patient' | 'provider';
 interface AppModeContextType {
   mode: AppMode;
   setMode: (mode: AppMode) => void;
-  isProviderRole: boolean; // Renamed for clarity
+  isProviderRole: boolean;
 }
 
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
@@ -21,8 +21,8 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   const isProviderRole = userProfile?.role === 'provider';
 
   useEffect(() => {
-    // If user is logged in, their role dictates the mode.
-    if (user && !isUserLoading && userProfile) {
+    // If a non-anonymous user is logged in, their role dictates the mode.
+    if (user && !user.isAnonymous && !isUserLoading && userProfile) {
       const userMode = isProviderRole ? 'provider' : 'patient';
       if (mode !== userMode) {
         setMode(userMode);
@@ -31,7 +31,7 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   }, [user, isUserLoading, userProfile, isProviderRole, mode]);
 
   const setModeHandler = (newMode: AppMode) => {
-    // A logged-in user cannot switch modes. Their role defines their mode.
+    // A logged-in (non-anonymous) user cannot switch modes. Their role defines their mode.
     if (user && !user.isAnonymous) {
       console.warn("Cannot switch modes while logged in. Mode is determined by user role.");
       return;
@@ -43,7 +43,7 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
     mode,
     setMode: setModeHandler,
     isProviderRole: isProviderRole,
-  }), [mode, isProviderRole]);
+  }), [mode, user, isProviderRole]); // Add user to dependency array
 
   return (
     <AppModeContext.Provider value={contextValue}>
