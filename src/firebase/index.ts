@@ -49,4 +49,3 @@ export * from './error-emitter';
 
 // This is the hook we want to export and use throughout the app.
 export const useUser = useUserHook;
-
