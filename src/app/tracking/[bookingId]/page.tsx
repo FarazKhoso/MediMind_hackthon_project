@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
-import { useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useCollection } from '@/firebase/firestore/use-collection';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { getStatusInfo } from '@/lib/booking-status';
 
@@ -85,15 +85,6 @@ export default function TrackingPage() {
         updateDoc(bookingRef, { status: 'completed', completedAt: serverTimestamp() })
           .catch(error => {
             console.warn(`Firestore permission error on completing booking. Silently failing. Details:`, error.message);
-            // The error emitter is removed to prevent the global error handler from catching this.
-            // errorEmitter.emit(
-            //     'permission-error',
-            //     new FirestorePermissionError({
-            //       path: bookingRef.path,
-            //       operation: 'update',
-            //       requestResourceData: { status: 'completed' },
-            //     })
-            // )
           });
     };
 
