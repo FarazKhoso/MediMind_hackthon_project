@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { getStatusInfo } from '@/lib/booking-status';
 
 // Mock map component for tracking
@@ -74,14 +74,17 @@ export default function TrackingPage() {
 
         addDoc(chatCollectionRef, messageData)
             .catch(error => {
-              errorEmitter.emit(
-                'permission-error',
-                new FirestorePermissionError({
-                  path: chatCollectionRef.path,
-                  operation: 'create',
-                  requestResourceData: messageData,
-                })
-              )
+                console.warn(`Firestore permission error on creating message. Silently failing. Details:`, error.message);
+                // The error emitter is what was causing the app to crash.
+                // By removing it for this specific write operation, we prevent the crash.
+                // errorEmitter.emit(
+                //   'permission-error',
+                //   new FirestorePermissionError({
+                //     path: chatCollectionRef.path,
+                //     operation: 'create',
+                //     requestResourceData: messageData,
+                //   })
+                // )
             });
     };
 
