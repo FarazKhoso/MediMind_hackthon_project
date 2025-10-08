@@ -3,8 +3,8 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore'
 import { useUser as useUserHook } from './auth/use-user';
 
 
@@ -14,18 +14,6 @@ export function initializeFirebase() {
   const app = isInitialized ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
-
-  // NOTE: This is a workaround for the demo environment to ensure emulators are always used.
-  if (typeof window !== 'undefined') {
-    // @ts-ignore
-    if (!auth.emulatorConfig) {
-      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    }
-    // @ts-ignore
-    if (!firestore.emulatorConfig) {
-      connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
-    }
-  }
 
   return { firebaseApp: app, auth, firestore };
 }
