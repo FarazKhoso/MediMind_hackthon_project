@@ -15,8 +15,8 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { errorEmitter } from '@/firebase/error-emitter';
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
@@ -53,12 +53,12 @@ export default function ProviderDashboard() {
         router.push(`/tracking/${bookingId}`);
       })
       .catch((e: any) => {
-        const permissionError = new FirestorePermissionError({
-          path: bookingRef.path,
-          operation: 'update',
-          requestResourceData: updateData,
+        console.error("Error accepting booking:", e);
+        toast({
+            variant: "destructive",
+            title: "Accept Failed",
+            description: "Could not accept the booking. Please try again."
         });
-        errorEmitter.emit('permission-error', permissionError);
       })
       .finally(() => {
         setUpdatingId(null);
@@ -78,11 +78,12 @@ export default function ProviderDashboard() {
             });
         })
         .catch((e: any) => {
-            const permissionError = new FirestorePermissionError({
-                path: bookingRef.path,
-                operation: 'delete',
+            console.error("Error declining booking:", e);
+            toast({
+                variant: "destructive",
+                title: "Decline Failed",
+                description: "Could not decline the booking. Please try again."
             });
-            errorEmitter.emit('permission-error', permissionError);
         })
         .finally(() => {
             setUpdatingId(null);
@@ -139,7 +140,7 @@ export default function ProviderDashboard() {
             </Alert>
           )}
 
-          {bookingRequests && bookingRequests.length === 0 && !bookingsLoading && (
+          {bookingRequests && bookingRequests.length === 0 && !bookingsLoading && !error && (
             <div className="text-center py-16">
               <p className="text-muted-foreground">No new booking requests at the moment.</p>
               <p className="text-sm text-muted-foreground/80">We'll notify you when one comes in.</p>

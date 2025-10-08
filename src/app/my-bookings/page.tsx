@@ -27,7 +27,7 @@ export default function MyBookingsPage() {
     );
   }, [firestore, user?.uid]);
 
-  const { data: bookings, isLoading: bookingsLoading } = useCollection(bookingsQuery);
+  const { data: bookings, isLoading: bookingsLoading, error } = useCollection(bookingsQuery);
 
   const handleViewDetails = (bookingId: string) => {
     router.push(`/tracking/${bookingId}`);
@@ -73,7 +73,7 @@ export default function MyBookingsPage() {
             </div>
           )}
 
-          {!bookingsLoading && bookings && bookings.length === 0 && (
+          {!bookingsLoading && bookings && bookings.length === 0 && !error && (
             <div className="text-center py-16">
                 <HandPlatter className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="font-headline text-lg">No Bookings Yet</h3>
@@ -84,7 +84,18 @@ export default function MyBookingsPage() {
             </div>
           )}
 
-          {!bookingsLoading && bookings && bookings.map((booking) => {
+          {error && (
+            <Card className="text-center">
+                <CardHeader>
+                    <CardTitle className="text-destructive">Error Loading Bookings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">Could not load your booking history. Please try again later.</p>
+                </CardContent>
+            </Card>
+          )}
+
+          {!bookingsLoading && bookings && bookings.length > 0 && bookings.map((booking) => {
             const statusInfo = getStatusInfo(booking.status);
             return (
               <Card key={booking.id} className="shadow-md animate-in fade-in rounded-xl overflow-hidden">

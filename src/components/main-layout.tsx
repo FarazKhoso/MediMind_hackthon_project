@@ -1,7 +1,7 @@
 
 'use client';
 
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter } from '@/components/ui/sidebar';
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, useSidebar } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard, User, LogOut, BookMarked } from 'lucide-react';
 import Link from 'next/link';
@@ -11,10 +11,12 @@ import { useAuth } from '@/firebase';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { ModeSwitcher } from './mode-switcher';
 
-const PatientMenu = () => (
+const PatientMenu = () => {
+    const { setOpenMobile } = useSidebar();
+    return (
     <>
         <SidebarMenuItem>
-            <Link href="/symptom-checker">
+            <Link href="/symptom-checker" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Symptom Checker">
                     <Bot />
                     <span>Symptom Checker</span>
@@ -22,7 +24,7 @@ const PatientMenu = () => (
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <Link href="/book-service">
+            <Link href="/book-service" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Book a Service">
                     <HandPlatter />
                     <span>Book a Service</span>
@@ -30,7 +32,7 @@ const PatientMenu = () => (
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <Link href="/my-bookings">
+            <Link href="/my-bookings" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="My Bookings">
                     <BookMarked />
                     <span>My Bookings</span>
@@ -38,7 +40,7 @@ const PatientMenu = () => (
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <Link href="/health-analysis">
+            <Link href="/health-analysis" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Health Analysis">
                     <Stethoscope />
                     <span>Health Analysis</span>
@@ -46,7 +48,7 @@ const PatientMenu = () => (
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <Link href="/medicine-reminder">
+            <Link href="/medicine-reminder" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Reminders">
                     <Syringe />
                     <span>Reminders</span>
@@ -54,7 +56,7 @@ const PatientMenu = () => (
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <Link href="/mental-health">
+            <Link href="/mental-health" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Mental Health">
                     <MessageSquareHeart />
                     <span>Mental Health</span>
@@ -62,12 +64,14 @@ const PatientMenu = () => (
             </Link>
         </SidebarMenuItem>
     </>
-);
+)};
 
-const ProviderMenu = () => (
+const ProviderMenu = () => {
+    const { setOpenMobile } = useSidebar();
+    return (
     <>
         <SidebarMenuItem>
-            <Link href="/">
+            <Link href="/" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Provider Dashboard">
                     <LayoutDashboard />
                     <span>Dashboard</span>
@@ -75,7 +79,7 @@ const ProviderMenu = () => (
             </Link>
         </SidebarMenuItem>
          <SidebarMenuItem>
-            <Link href="/provider-bookings">
+            <Link href="/provider-bookings" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="My Bookings">
                     <BookMarked />
                     <span>My Bookings</span>
@@ -83,7 +87,7 @@ const ProviderMenu = () => (
             </Link>
         </SidebarMenuItem>
         <SidebarMenuItem>
-            <Link href="/disease-tracking">
+            <Link href="/disease-tracking" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Disease Tracking">
                     <HeartPulse />
                     <span>Disease Tracking</span>
@@ -91,13 +95,14 @@ const ProviderMenu = () => (
             </Link>
         </SidebarMenuItem>
     </>
-);
+)};
 
 
 const AuthMenu = ({ mode }: { mode: 'patient' | 'provider' }) => {
+    const { setOpenMobile } = useSidebar();
     return (
         <SidebarMenuItem>
-            <Link href="/login">
+            <Link href="/login" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Login">
                     <LogIn />
                     <span>Login</span>
