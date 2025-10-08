@@ -15,8 +15,6 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
@@ -54,13 +52,12 @@ export default function ProviderDashboard() {
         router.push(`/tracking/${bookingId}`);
       })
       .catch((e: any) => {
-        const permissionError = new FirestorePermissionError({
-          path: bookingRef.path,
-          operation: 'update',
-          requestResourceData: updateData,
-        });
-        errorEmitter.emit('permission-error', permissionError);
         console.error("Failed to accept booking:", e);
+        toast({
+          variant: 'destructive',
+          title: 'Update Failed',
+          description: 'Could not accept booking. Check console for details.'
+        });
       })
       .finally(() => {
         setAcceptingId(null);
@@ -80,12 +77,12 @@ export default function ProviderDashboard() {
             });
         })
         .catch((e: any) => {
-            const permissionError = new FirestorePermissionError({
-                path: bookingRef.path,
-                operation: 'delete',
-            });
-            errorEmitter.emit('permission-error', permissionError);
             console.error("Failed to decline booking:", e);
+            toast({
+              variant: 'destructive',
+              title: 'Decline Failed',
+              description: 'Could not decline booking. Check console for details.'
+            });
         })
         .finally(() => {
             setDecliningId(null);
