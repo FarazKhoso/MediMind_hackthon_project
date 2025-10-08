@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -8,6 +9,8 @@ import {
   FirestoreError,
   DocumentSnapshot,
 } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 /** Utility type to add an 'id' field to a given type T. */
 type WithId<T> = T & { id: string };
@@ -42,7 +45,7 @@ export function useDoc<T = any>(
   type StateDataType = WithId<T> | null;
 
   const [data, setData] = useState<StateDataType>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Start with loading true
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
@@ -54,7 +57,6 @@ export function useDoc<T = any>(
     }
 
     setIsLoading(true);
-    setError(null);
 
     const unsubscribe = onSnapshot(
       memoizedDocRef,
@@ -67,21 +69,20 @@ export function useDoc<T = any>(
         setError(null);
         setIsLoading(false);
       },
-      (error: FirestoreError) => {
-        // PERMANENT FIX: Instead of throwing an error that crashes the app,
-        // we will log it and return null data. This stops the recurrent crash.
-        console.warn(`Firestore permission error on doc read. Returning null. Details:`, error.message);
-        setData(null); // Return null to prevent app crash.
-        setError(error);
+      (err: FirestoreError) => {
+        const contextualError = new FirestorePermissionError({
+          path: memoizedDocRef.path,
+          operation: 'get',
+        });
+        setError(contextualError);
+        setData(null);
         setIsLoading(false);
-
-        // The error emitter is removed to prevent the global error handler from catching this.
-        // errorEmitter.emit('permission-error', contextualError);
+        errorEmitter.emit('permission-error', contextualError);
       }
     );
 
     return () => unsubscribe();
-  }, [memoizedDocRef]); // Re-run if the memoizedDocRef changes.
+  }, [memoizedDocRef]);
 
   return { data, isLoading, error };
 }
