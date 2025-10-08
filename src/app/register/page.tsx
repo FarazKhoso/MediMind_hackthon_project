@@ -12,6 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import {
   Form,
@@ -225,6 +226,14 @@ export default function RegisterPage() {
             </form>
           </Form>
         </CardContent>
+        <CardFooter className="flex justify-center">
+           <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <a href="/login" className="font-semibold text-primary hover:underline">
+              Login
+            </a>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

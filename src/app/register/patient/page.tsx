@@ -10,6 +10,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -146,13 +147,15 @@ export default function RegisterPatientPage() {
               </Button>
             </form>
           </Form>
-           <p className="text-center text-sm text-muted-foreground mt-6">
-            Are you a health provider?{' '}
-            <a href="/register" className="font-semibold text-primary hover:underline">
-              Register here
+        </CardContent>
+         <CardFooter className="flex justify-center">
+           <p className="text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <a href="/login" className="font-semibold text-primary hover:underline">
+              Login
             </a>
           </p>
-        </CardContent>
+        </CardFooter>
       </Card>
     </div>
   );

@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import { useAppMode } from '@/hooks/use-app-mode';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -42,6 +43,7 @@ export default function LoginPage() {
   const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  const { mode } = useAppMode();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -70,6 +72,8 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  const registrationPath = mode === 'provider' ? '/register' : '/register/patient';
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-2xl">
@@ -79,7 +83,7 @@ export default function LoginPage() {
             </div>
           <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
           <CardDescription>
-            Login to your MediMind AI account.
+            Login to your MediMind AI account as a {mode}.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -122,14 +126,13 @@ export default function LoginPage() {
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex-col gap-4">
+        <CardFooter className="flex justify-center">
             <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?
+                Don&apos;t have an account?{' '}
+                <a href={registrationPath} className="font-semibold text-primary hover:underline">
+                  Register
+                </a>
             </p>
-            <div className="grid grid-cols-2 gap-4 w-full">
-                <Button variant="outline" onClick={() => router.push('/register/patient')}>Register as Patient</Button>
-                <Button variant="outline" onClick={() => router.push('/register')}>Register as Provider</Button>
-            </div>
         </CardFooter>
       </Card>
     </div>
