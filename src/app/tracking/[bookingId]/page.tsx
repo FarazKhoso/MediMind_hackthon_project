@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { doc, updateDoc, collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck, MessageSquare, SendHorizonal } from 'lucide-react';
+import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck, MessageSquare, SendHorizonal, Star, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { getStatusInfo } from '@/lib/booking-status';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock map component for tracking
 const TrackingMap = () => (
@@ -26,9 +27,9 @@ const TrackingMap = () => (
     </div>
 );
 
-const ChatBubble = ({ message, role }: { message: string, role: 'customer' | 'provider' | string }) => (
-    <div className={`flex ${role === 'customer' ? 'justify-end' : 'justify-start'}`}>
-        <div className={`rounded-lg px-4 py-2 max-w-sm shadow-sm ${role === 'customer' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+const ChatBubble = ({ message, role, userRole }: { message: string, role: 'customer' | 'provider' | string, userRole: 'customer' | 'provider' | undefined }) => (
+    <div className={`flex ${role === userRole ? 'justify-end' : 'justify-start'}`}>
+        <div className={`rounded-lg px-4 py-2 max-w-sm shadow-sm ${role === userRole ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
             {message}
         </div>
     </div>
@@ -39,6 +40,7 @@ export default function TrackingPage() {
     const firestore = useFirestore();
     const { user, userProfile } = useUser();
     const router = useRouter();
+    const { toast } = useToast();
     const [newMessage, setNewMessage] = useState('');
 
     const bookingRef = useMemoFirebase(() => {
@@ -62,31 +64,49 @@ export default function TrackingPage() {
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !chatCollectionRef || !userProfile) return;
+        if (!newMessage.trim() || !chatCollectionRef || !userProfile?.role) return;
 
         const messageData = {
             text: newMessage,
-            sender: userProfile.role || 'customer',
+            sender: userProfile.role,
             createdAt: serverTimestamp(),
         };
-
         setNewMessage('');
-
-        addDoc(chatCollectionRef, messageData)
-            .catch(error => {
-                // Silently log permission errors in the console without crashing the app.
-                // The rules file should be the primary fix, this is a fallback.
-                console.warn(`Firestore permission error on creating message. Silently failing. Details:`, error.message);
+        try {
+            await addDoc(chatCollectionRef, messageData);
+        } catch(error: any) {
+            console.warn(`Firestore permission error on creating message. Silently failing. Details:`, error.message);
+            toast({
+                variant: 'destructive',
+                title: 'Message failed',
+                description: 'Could not send message due to a permission error.'
             });
+        }
     };
 
     const handleCompleteBooking = async () => {
         if (!bookingRef) return;
-        updateDoc(bookingRef, { status: 'completed', completedAt: serverTimestamp() })
-          .catch(error => {
+        try {
+            await updateDoc(bookingRef, { status: 'completed', completedAt: serverTimestamp() });
+             toast({ title: "Booking Completed!", description: "The booking has been marked as complete." });
+        } catch (error: any) {
             console.warn(`Firestore permission error on completing booking. Silently failing. Details:`, error.message);
-          });
+            toast({ variant: 'destructive', title: 'Update failed', description: 'Could not complete the booking.' });
+        }
     };
+    
+    const handleCancelBooking = async () => {
+        if (!bookingRef) return;
+        try {
+            await updateDoc(bookingRef, { status: 'cancelled' });
+            toast({ title: "Booking Cancelled", description: "Your booking has been cancelled.", variant: 'destructive' });
+            router.push('/my-bookings');
+        } catch (error: any) {
+            console.warn(`Firestore permission error on cancelling booking. Silently failing. Details:`, error.message);
+            toast({ variant: 'destructive', title: 'Cancellation failed', description: 'Could not cancel the booking.' });
+        }
+    };
+
 
     if (bookingLoading) {
         return <div className="flex h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>;
@@ -109,6 +129,77 @@ export default function TrackingPage() {
     }
     
     const statusInfo = getStatusInfo(booking.status);
+    const isProvider = userProfile?.role === 'provider';
+    const isCustomer = userProfile?.role === 'customer';
+
+    const renderActionButtons = () => {
+        if (booking.status === 'completed' || booking.status === 'cancelled') return null;
+
+        if (isProvider && (booking.status === 'accepted' || booking.status === 'in_progress')) {
+             return (
+                <Button onClick={handleCompleteBooking} className="w-full bg-green-500 hover:bg-green-600" size="lg">
+                    <CheckCircle className="mr-2"/> Mark as Completed
+                </Button>
+            );
+        }
+        
+        if(isCustomer && (booking.status === 'requested' || booking.status === 'accepted')) {
+            return (
+                <Button onClick={handleCancelBooking} variant="destructive" className="w-full" size="lg">
+                    <XCircle className="mr-2"/> Cancel Booking
+                </Button>
+            )
+        }
+        
+        return null;
+    }
+    
+    const renderStatusAlert = () => {
+        if (booking.status === 'completed') {
+             return (
+                <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
+                    <ShieldCheck className="h-4 w-4 !text-green-600"/>
+                    <AlertTitle>Booking Completed!</AlertTitle>
+                    <AlertDescription>
+                        {isCustomer ? 'Thank you for using MediMind AI. Please rate your provider.' : 'This job has been successfully completed.'}
+                    </AlertDescription>
+                </Alert>
+            );
+        }
+        
+        if (booking.status === 'cancelled') {
+             return (
+                <Alert variant="destructive">
+                    <XCircle className="h-4 w-4"/>
+                    <AlertTitle>Booking Cancelled</AlertTitle>
+                    <AlertDescription>
+                        This booking has been cancelled.
+                    </AlertDescription>
+                </Alert>
+            );
+        }
+        return null;
+    }
+    
+    const renderRating = () => {
+        if (isCustomer && booking.status === 'completed') {
+            return (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Rate your Provider</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-center gap-2">
+                        {[1, 2, 3, 4, 5].map(rating => (
+                            <button key={rating} className="group">
+                                <Star className="h-8 w-8 text-gray-300 group-hover:text-yellow-400 transition-colors" />
+                            </button>
+                        ))}
+                    </CardContent>
+                </Card>
+            )
+        }
+        return null;
+    }
 
     return (
         <div className="flex flex-col h-full bg-background">
@@ -145,25 +236,16 @@ export default function TrackingPage() {
                                         <AvatarFallback><User /></AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold">Provider Assigned</p>
-                                        <p className="text-muted-foreground text-xs">{booking.providerId}</p>
+                                        <p className="font-semibold">{isProvider ? 'Customer' : 'Provider Assigned'}</p>
+                                        <p className="text-muted-foreground text-xs">{isProvider ? booking.customerId : booking.providerId}</p>
                                     </div>
                                 </div>
                                 )}
                              </CardContent>
                         </Card>
-                        {userProfile?.role === 'provider' && booking.status === 'accepted' && (
-                            <Button onClick={handleCompleteBooking} className="w-full bg-green-500 hover:bg-green-600" size="lg">
-                                <CheckCircle className="mr-2"/> Mark as Completed
-                            </Button>
-                        )}
-                         {booking.status === 'completed' && (
-                            <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
-                                <ShieldCheck className="h-4 w-4 !text-green-600"/>
-                                <AlertTitle>Booking Completed!</AlertTitle>
-                                <AlertDescription>Thank you for using MediMind AI. Please rate your provider.</AlertDescription>
-                            </Alert>
-                        )}
+                        {renderActionButtons()}
+                        {renderStatusAlert()}
+                        {renderRating()}
                     </div>
 
                     {/* Right Column - Negotiation Chat */}
@@ -171,12 +253,12 @@ export default function TrackingPage() {
                         <Card className="flex flex-col h-full max-h-[70vh]">
                             <CardHeader>
                                 <CardTitle>Negotiation Chat</CardTitle>
-                                <CardDescription>Communicate with your provider/customer.</CardDescription>
+                                <CardDescription>Communicate with your {isProvider ? 'customer' : 'provider'}.</CardDescription>
                             </CardHeader>
                             <CardContent className="flex-1 overflow-y-auto space-y-4 p-4">
                                 {messagesLoading && <div className="flex justify-center p-4"><Loader2 className="animate-spin" /></div>}
                                 {messages?.map(msg => (
-                                    <ChatBubble key={msg.id} message={msg.text} role={msg.sender} />
+                                    <ChatBubble key={msg.id} message={msg.text} role={msg.sender} userRole={userProfile?.role} />
                                 ))}
                                 {!messagesLoading && messages?.length === 0 && (
                                     <div className="text-center text-muted-foreground p-8">
@@ -194,9 +276,9 @@ export default function TrackingPage() {
                                         onChange={(e) => setNewMessage(e.target.value)}
                                         className="flex-1"
                                         rows={1}
-                                        disabled={messagesLoading}
+                                        disabled={messagesLoading || booking.status === 'completed' || booking.status === 'cancelled'}
                                     />
-                                    <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+                                    <Button type="submit" size="icon" disabled={!newMessage.trim() || booking.status === 'completed' || booking.status === 'cancelled'}>
                                         <SendHorizonal />
                                     </Button>
                                 </form>
@@ -208,3 +290,4 @@ export default function TrackingPage() {
         </div>
     );
 }
+
