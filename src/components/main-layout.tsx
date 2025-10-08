@@ -74,19 +74,19 @@ const ProviderMenu = () => (
                 </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
+         <SidebarMenuItem>
+            <Link href="/provider-bookings">
+                <SidebarMenuButton tooltip="My Bookings">
+                    <BookMarked />
+                    <span>My Bookings</span>
+                </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
         <SidebarMenuItem>
             <Link href="/disease-tracking">
                 <SidebarMenuButton tooltip="Disease Tracking">
                     <HeartPulse />
                     <span>Disease Tracking</span>
-                </SidebarMenuButton>
-            </Link>
-        </SidebarMenuItem>
-         <SidebarMenuItem>
-            <Link href="/provider-profile">
-                <SidebarMenuButton tooltip="My Profile">
-                    <User />
-                    <span>My Profile</span>
                 </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
