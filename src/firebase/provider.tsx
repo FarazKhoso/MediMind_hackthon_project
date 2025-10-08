@@ -111,7 +111,9 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   }, [userAuthState.user, firestore]);
   
   // Use useDoc to fetch the user profile in real-time
-  const { data: userProfile, isLoading: isUserProfileLoading } = useDoc<UserProfile>(userProfileRef);
+  const { data: userProfileData, isLoading: isUserProfileLoading } = useDoc<UserProfile>(userProfileRef);
+
+  const userProfile = useMemo(() => userProfileData, [userProfileData]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
