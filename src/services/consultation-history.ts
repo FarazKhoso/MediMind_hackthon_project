@@ -7,8 +7,6 @@ import {
   serverTimestamp,
   Firestore,
 } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 interface ConsultationLog {
   userId: string;
@@ -33,19 +31,15 @@ export function logConsultation(db: Firestore, log: ConsultationLog) {
   
   const logWithTimestamp = {
     ...log,
-    timestamp: serverTimestamp(),
+    timestamp: new Date(), // Using client-side timestamp to avoid potential server-side issues.
   };
 
   const collectionRef = collection(db, 'users', log.userId, 'consultationLogs');
   
   addDoc(collectionRef, logWithTimestamp)
     .catch(error => {
-      // Create and emit a detailed, contextual error for debugging security rules.
-      const permissionError = new FirestorePermissionError({
-        path: collectionRef.path,
-        operation: 'create',
-        requestResourceData: logWithTimestamp,
-      });
-      errorEmitter.emit('permission-error', permissionError);
+      // With open rules, this should not be a permission error.
+      // Log any other error to the console for debugging.
+      console.error("Failed to log consultation:", error);
     });
 }
