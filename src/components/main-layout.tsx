@@ -95,48 +95,15 @@ const ProviderMenu = () => (
 
 
 const AuthMenu = ({ mode }: { mode: 'patient' | 'provider' }) => {
-    if (mode === 'provider') {
-        return (
-            <>
-                <SidebarMenuItem>
-                    <Link href="/login">
-                        <SidebarMenuButton tooltip="Login as Provider">
-                            <LogIn />
-                            <span>Provider Login</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                    <Link href="/register">
-                        <SidebarMenuButton tooltip="Register as Provider">
-                            <UserPlus />
-                            <span>Register as Provider</span>
-                        </SidebarMenuButton>
-                    </Link>
-                </SidebarMenuItem>
-            </>
-        )
-    }
-
     return (
-        <>
-            <SidebarMenuItem>
-                <Link href="/login">
-                    <SidebarMenuButton tooltip="Login">
-                        <LogIn />
-                        <span>Login</span>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-                <Link href="/register/patient">
-                    <SidebarMenuButton tooltip="Register as Patient">
-                        <UserPlus />
-                        <span>Register as Patient</span>
-                    </SidebarMenuButton>
-                </Link>
-            </SidebarMenuItem>
-        </>
+        <SidebarMenuItem>
+            <Link href="/login">
+                <SidebarMenuButton tooltip="Login">
+                    <LogIn />
+                    <span>Login</span>
+                </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
     );
 };
 

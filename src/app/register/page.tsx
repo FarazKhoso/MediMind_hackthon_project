@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
+import Link from 'next/link';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name is required.'),
@@ -229,9 +230,9 @@ export default function RegisterPage() {
         <CardFooter className="flex justify-center">
            <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <a href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               Login
-            </a>
+            </Link>
           </p>
         </CardFooter>
       </Card>

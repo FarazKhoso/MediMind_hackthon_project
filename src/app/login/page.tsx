@@ -30,6 +30,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { useAppMode } from '@/hooks/use-app-mode';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -72,6 +73,7 @@ export default function LoginPage() {
     setLoading(false);
   };
 
+  // The registration path is now determined by the current mode.
   const registrationPath = mode === 'provider' ? '/register' : '/register/patient';
 
   return (
@@ -129,9 +131,9 @@ export default function LoginPage() {
         <CardFooter className="flex justify-center">
             <p className="text-center text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
-                <a href={registrationPath} className="font-semibold text-primary hover:underline">
+                <Link href={registrationPath} className="font-semibold text-primary hover:underline">
                   Register
-                </a>
+                </Link>
             </p>
         </CardFooter>
       </Card>
