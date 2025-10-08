@@ -3,7 +3,7 @@
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard, User, LogOut } from 'lucide-react';
+import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard, User, LogOut, BookMarked } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -26,6 +26,14 @@ const PatientMenu = () => (
                 <SidebarMenuButton tooltip="Book a Service">
                     <HandPlatter />
                     <span>Book a Service</span>
+                </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+            <Link href="/my-bookings">
+                <SidebarMenuButton tooltip="My Bookings">
+                    <BookMarked />
+                    <span>My Bookings</span>
                 </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
