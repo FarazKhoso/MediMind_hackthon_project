@@ -40,8 +40,12 @@ export function logConsultation(db: Firestore, log: ConsultationLog) {
   
   addDoc(collectionRef, logWithTimestamp)
     .catch(error => {
-      // With open rules, this should not trigger for permission errors,
-      // but we log any other potential errors to the console.
-      console.error("Error logging consultation:", error);
+      // Create and emit a detailed, contextual error for debugging security rules.
+      const permissionError = new FirestorePermissionError({
+        path: collectionRef.path,
+        operation: 'create',
+        requestResourceData: logWithTimestamp,
+      });
+      errorEmitter.emit('permission-error', permissionError);
     });
 }
