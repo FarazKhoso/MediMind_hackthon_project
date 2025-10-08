@@ -24,6 +24,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, MapPin, DollarSign, Stethoscope, User, Syringe } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const bookingSchema = z.object({
   serviceType: z.enum(['doctor', 'nurse', 'compounder']),
@@ -58,40 +60,47 @@ export default function BookServicePage() {
   const onSubmit: SubmitHandler<BookingFormValues> = async (data) => {
     setLoading(true);
 
-    if (!user) {
+    if (!user || !firestore) {
       toast({
         variant: 'destructive',
         title: 'Authentication Required',
-        description: 'Please log in to book a service.',
+        description: 'Please log in or wait for services to initialize.',
       });
       setLoading(false);
-      router.push('/login');
+      if (!user) router.push('/login');
       return;
     }
 
-    try {
-      const docRef = await addDoc(collection(firestore, 'bookings'), {
-        customerId: user.uid,
-        ...data,
-        timing: 'now', // Defaulting for new UI
-        status: 'requested',
-        createdAt: new Date(),
+    const bookingData = {
+      customerId: user.uid,
+      ...data,
+      timing: 'now', // Defaulting for new UI
+      status: 'requested',
+      createdAt: new Date(),
+    };
+    
+    const bookingsCollection = collection(firestore, 'bookings');
+    
+    // Non-blocking write with custom error handling
+    addDoc(bookingsCollection, bookingData)
+      .then(docRef => {
+        toast({
+          title: 'Booking Request Sent!',
+          description: 'Nearby providers have been notified. Please wait for a response.',
+        });
+        router.push(`/tracking/${docRef.id}`);
+      })
+      .catch(error => {
+        // Emit a detailed, contextual error for debugging
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: bookingsCollection.path,
+          operation: 'create',
+          requestResourceData: bookingData,
+        }));
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-      toast({
-        title: 'Booking Request Sent!',
-        description: 'Nearby providers have been notified. Please wait for a response.',
-      });
-      router.push(`/tracking/${docRef.id}`);
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Booking Failed',
-        description: error.message || 'An unexpected error occurred.',
-      });
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
