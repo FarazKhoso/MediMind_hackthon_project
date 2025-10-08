@@ -59,6 +59,9 @@ export default function ProviderBookingsPage() {
      )
   }
 
+  const showNoBookingsMessage = !bookingsLoading && bookings && bookings.length === 0;
+  const showError = error && !bookingsLoading && (!bookings || bookings.length === 0);
+
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
@@ -73,7 +76,7 @@ export default function ProviderBookingsPage() {
             </div>
           )}
 
-          {!bookingsLoading && bookings && bookings.length === 0 && !error && (
+          {showNoBookingsMessage && (
             <div className="text-center py-16">
                 <HandPlatter className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="font-headline text-lg">No Assigned Bookings Yet</h3>
@@ -84,7 +87,7 @@ export default function ProviderBookingsPage() {
             </div>
           )}
           
-          {error && (
+          {showError && (
              <Card className="text-center">
                 <CardHeader>
                     <CardTitle className="text-destructive">Error Loading Bookings</CardTitle>
