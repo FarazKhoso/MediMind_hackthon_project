@@ -69,7 +69,7 @@ export default function TrackingPage() {
         const messageData = {
             text: newMessage,
             sender: userProfile.role,
-            createdAt: serverTimestamp(),
+            createdAt: new Date(),
         };
         setNewMessage('');
         try {
@@ -87,7 +87,7 @@ export default function TrackingPage() {
     const handleCompleteBooking = async () => {
         if (!bookingRef) return;
         try {
-            await updateDoc(bookingRef, { status: 'completed', completedAt: serverTimestamp() });
+            await updateDoc(bookingRef, { status: 'completed', completedAt: new Date() });
              toast({ title: "Booking Completed!", description: "The booking has been marked as complete." });
         } catch (error: any) {
             console.warn(`Firestore permission error on completing booking. Silently failing. Details:`, error.message);
