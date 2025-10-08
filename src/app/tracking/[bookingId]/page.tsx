@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { useCollection, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Mock map component for tracking
 const TrackingMap = () => (
