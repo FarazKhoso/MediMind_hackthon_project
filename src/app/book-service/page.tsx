@@ -28,7 +28,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 const bookingSchema = z.object({
   serviceType: z.enum(['doctor', 'nurse', 'compounder']),
   location: z.string().min(1, 'Location is required'),
-  bidPrice: z.number().min(300).max(5000),
+  bidPrice: z.number().min(300, 'Bid must be at least 300 PKR').max(5000, 'Bid cannot exceed 5000 PKR'),
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
@@ -75,7 +75,7 @@ export default function BookServicePage() {
         ...data,
         timing: 'now', // Defaulting for new UI
         status: 'requested',
-        createdAt: serverTimestamp(),
+        createdAt: new Date(),
       });
 
       toast({
@@ -168,7 +168,10 @@ export default function BookServicePage() {
                                                   className="pl-10 h-11 font-bold" 
                                                   placeholder="Offer your fare"
                                                   value={field.value}
-                                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                                  onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    field.onChange(value === '' ? 0 : parseInt(value, 10));
+                                                  }}
                                                 />
                                           </div>
                                       </FormControl>
