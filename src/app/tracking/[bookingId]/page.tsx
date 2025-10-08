@@ -74,17 +74,9 @@ export default function TrackingPage() {
 
         addDoc(chatCollectionRef, messageData)
             .catch(error => {
+                // Silently log permission errors in the console without crashing the app.
+                // The rules file should be the primary fix, this is a fallback.
                 console.warn(`Firestore permission error on creating message. Silently failing. Details:`, error.message);
-                // The error emitter is what was causing the app to crash.
-                // By removing it for this specific write operation, we prevent the crash.
-                // errorEmitter.emit(
-                //   'permission-error',
-                //   new FirestorePermissionError({
-                //     path: chatCollectionRef.path,
-                //     operation: 'create',
-                //     requestResourceData: messageData,
-                //   })
-                // )
             });
     };
 
