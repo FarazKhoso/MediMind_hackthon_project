@@ -75,7 +75,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   auth,
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
-    user: null,
+    user: auth.currentUser, // Initialize with current user
     isUserLoading: true, 
     userError: null,
   });
@@ -86,8 +86,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
       return;
     }
-
-    setUserAuthState({ user: null, isUserLoading: true, userError: null });
+    
+    // Set loading to false if user is already available from initialization
+    if (auth.currentUser) {
+        setUserAuthState(prevState => ({ ...prevState, isUserLoading: false }));
+    }
 
     const unsubscribe = onAuthStateChanged(
       auth,
