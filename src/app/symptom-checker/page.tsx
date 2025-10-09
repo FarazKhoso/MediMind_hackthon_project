@@ -3,10 +3,12 @@
 
 import { ChatContainer } from "@/components/chat-container";
 import { AppHeader } from "@/components/header";
+import { useSearchParams } from "next/navigation";
 
 
-export default function SymptomCheckerPage({ searchParams }: { searchParams: { agent?: string } }) {
-  const agent = searchParams?.agent;
+export default function SymptomCheckerPage() {
+  const searchParams = useSearchParams();
+  const agent = searchParams.get('agent') || undefined;
 
   return (
     <div className="flex flex-col h-full">
