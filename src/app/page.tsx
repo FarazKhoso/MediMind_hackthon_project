@@ -17,7 +17,6 @@ import { HowItWorks } from '@/components/landing/how-it-works';
 import { DoctorProfilesPreview } from '@/components/landing/doctor-profiles-preview';
 import { Testimonials } from '@/components/landing/testimonials';
 import { FeaturedSpecialties } from '@/components/landing/featured-specialties';
-import { AppDownloadCTA } from '@/components/landing/app-download-cta';
 
 const FeatureCard = ({
   icon: Icon,
@@ -110,7 +109,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="py-20 md:py-24 bg-secondary/30">
+        <section className="py-20 md:py-24 bg-secondary/50">
           <div className="container">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl font-headline">
@@ -137,7 +136,6 @@ export default function HomePage() {
         <DoctorProfilesPreview />
         <FeaturedSpecialties />
         <Testimonials />
-        <AppDownloadCTA />
       </main>
     </div>
   );

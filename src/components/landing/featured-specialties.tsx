@@ -1,4 +1,6 @@
 
+'use client';
+
 import {
   Stethoscope,
   HeartPulse,
@@ -7,6 +9,8 @@ import {
   Bone,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
+import { Button } from '../ui/button';
 
 // Custom inline SVG for the Tooth icon
 const ToothIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -20,12 +24,12 @@ const ToothIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 const specialties = [
-  { name: 'General Physician', icon: Stethoscope },
-  { name: 'Cardiologist', icon: HeartPulse },
-  { name: 'Dentist', icon: ToothIcon },
-  { name: 'Pediatrician', icon: Baby },
-  { name: 'Neurologist', icon: Brain },
-  { name: 'Orthopedic', icon: Bone },
+  { name: 'General Physician', icon: Stethoscope, agentId: 'general' },
+  { name: 'Cardiologist', icon: HeartPulse, agentId: 'cardio' },
+  { name: 'Dentist', icon: ToothIcon, agentId: 'dental' },
+  { name: 'Pediatrician', icon: Baby, agentId: 'peds' },
+  { name: 'Neurologist', icon: Brain, agentId: 'neuro' },
+  { name: 'Orthopedic', icon: Bone, agentId: 'ortho' },
 ];
 
 export function FeaturedSpecialties() {
@@ -33,22 +37,27 @@ export function FeaturedSpecialties() {
     <section className="py-20 md:py-24">
       <div className="container">
         <h2 className="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Find by Speciality
+          Talk to a Specialist AI Agent
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-center text-lg text-foreground/70">
-          Top-rated doctors from various fields are here to help you.
+          Get instant, specialized advice from our AI agents, trained in various medical fields.
         </p>
-        <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-6">
+        <div className="mt-12 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-6">
           {specialties.map((specialty) => (
             <Card
               key={specialty.name}
-              className="group cursor-pointer overflow-hidden text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+              className="group overflow-hidden text-center transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl flex flex-col"
             >
-              <CardContent className="flex flex-col items-center justify-center p-6">
-                <div className="mb-4 rounded-full bg-accent p-4 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
-                  <specialty.icon className="h-8 w-8" />
+              <CardContent className="flex flex-col items-center justify-between p-6 flex-1">
+                <div className="flex-grow flex flex-col items-center justify-center">
+                  <div className="mb-4 rounded-full bg-accent p-4 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                    <specialty.icon className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-sm font-semibold">{specialty.name}</h3>
                 </div>
-                <h3 className="text-sm font-semibold">{specialty.name}</h3>
+                <Link href={`/symptom-checker?agent=${specialty.agentId}`} className="w-full mt-4">
+                    <Button variant="outline" size="sm" className="w-full">Talk Now</Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
