@@ -22,6 +22,7 @@ import { useSidebar } from './ui/sidebar';
 import { ModeToggle } from './theme-toggle';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
+import { Logo } from './logo';
 
 export function AppHeader() {
   const { user, userProfile } = useUser();
@@ -38,15 +39,19 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 items-center">
-        <div className="md:hidden">
+        <div className="flex items-center gap-2">
             <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
+                className="md:hidden"
             >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle Sidebar</span>
             </Button>
+            <div className="hidden md:block">
+              <Logo />
+            </div>
         </div>
         
         <div className="flex-1" />
