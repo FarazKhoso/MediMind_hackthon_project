@@ -13,6 +13,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
 import { translations } from '@/lib/translations';
+import { HowItWorks } from '@/components/landing/how-it-works';
 
 const FeatureCard = ({
   icon: Icon,
@@ -128,6 +129,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <HowItWorks />
       </main>
     </div>
   );
