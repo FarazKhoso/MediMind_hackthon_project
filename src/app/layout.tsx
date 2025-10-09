@@ -50,7 +50,7 @@ export default function RootLayout({
           <LanguageProvider>
             <FirebaseClientProvider>
               <AppModeProvider>
-                <SidebarProvider>
+                <SidebarProvider defaultOpen={false}>
                   <MainLayout>{children}</MainLayout>
                 </SidebarProvider>
               </AppModeProvider>

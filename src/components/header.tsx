@@ -1,7 +1,8 @@
+
 'use client';
 
 import Link from 'next/link';
-import { LogOut, User, Menu, Settings, Languages, Check } from 'lucide-react';
+import { LogOut, User, Menu, Settings, Languages, Check, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -32,7 +33,9 @@ export function AppHeader() {
   const { language, setLanguage } = useLanguage();
 
   const handleLogout = async () => {
-    await signOut(auth);
+    if (auth) {
+      await signOut(auth);
+    }
     router.push('/');
   };
 
@@ -44,7 +47,7 @@ export function AppHeader() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="md:hidden"
+                className="mr-2"
             >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle Sidebar</span>
