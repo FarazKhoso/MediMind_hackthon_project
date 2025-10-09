@@ -92,7 +92,7 @@ export function ChatContainer() {
     <div className="flex flex-col h-full">
       <div className="relative flex-1">
         <div className="absolute inset-0 overflow-y-auto" ref={scrollRef}>
-            <div className="p-4 md:p-8 space-y-6">
+            <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
             {messages.length === 0 && !isLoading ? (
                 <EmptyChat onQuery={handleExampleQuery} />
             ) : (
