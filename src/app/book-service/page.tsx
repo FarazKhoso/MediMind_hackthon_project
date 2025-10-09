@@ -23,8 +23,7 @@ import { addDoc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, MapPin, DollarSign, Stethoscope, User, Syringe, ArrowLeft } from 'lucide-react';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import Image from 'next/image';
 
 const bookingSchema = z.object({
   serviceType: z.enum(['doctor', 'nurse', 'compounder']),
@@ -113,15 +112,17 @@ export default function BookServicePage() {
       </header>
       <main className="flex-1 flex flex-col">
         <div className="flex-1 relative">
-            <div className="absolute inset-0 bg-muted flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                    <MapPin className="mx-auto h-12 w-12" />
-                    <p>Map Preview Placeholder</p>
-                </div>
-            </div>
+             <Image
+                src="https://sehatkahani.com/wp-content/uploads/2022/07/doctor-at-home-service-1024x683.jpg"
+                alt="Doctor visiting a patient at home"
+                fill
+                className="object-cover"
+                data-ai-hint="doctor visiting home"
+             />
+             <div className="absolute inset-0 bg-black/40"></div>
         </div>
         
-        <div className="bg-background p-4 rounded-t-2xl shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]">
+        <div className="bg-background p-4 rounded-t-2xl shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)] -mt-8 relative z-10">
           <Card className="border-0 shadow-none">
               <CardContent className="p-2">
               <Form {...form}>
