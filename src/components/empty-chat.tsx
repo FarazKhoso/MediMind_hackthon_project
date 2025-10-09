@@ -28,7 +28,7 @@ export function EmptyChat({ onQuery }: EmptyChatProps) {
             <Button
               key={i}
               variant="outline"
-              className="text-left justify-start h-auto p-3"
+              className="text-left justify-start h-auto p-3 whitespace-normal"
               onClick={() => onQuery(query)}
             >
               <Lightbulb className="mr-3 h-5 w-5 shrink-0" />
