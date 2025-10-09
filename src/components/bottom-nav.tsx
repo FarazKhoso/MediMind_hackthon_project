@@ -3,8 +3,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Bot, HandPlatter, BookMarked } from 'lucide-react';
+import { Home, Bot, HandPlatter, BookMarked, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -15,6 +16,12 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { user, isUserLoading } = useUser();
+
+  const getProfileHref = () => {
+    if (isUserLoading) return '#';
+    return user ? '/profile' : '/login'; // Assuming a /profile page exists
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] md:hidden">

@@ -5,6 +5,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { AppModeProvider } from '@/hooks/use-app-mode';
 import { Open_Sans, Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import { MainLayout } from '@/components/main-layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 
 const fontPoppins = Poppins({
@@ -20,8 +21,8 @@ const fontOpenSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'MediConnect',
-  description: 'Book Doctor Appointments Online, Anytime.',
+  title: 'MediMind AI',
+  description: 'Your AI Health Assistant',
 };
 
 export default function RootLayout({
@@ -40,7 +41,9 @@ export default function RootLayout({
       >
         <FirebaseClientProvider>
           <AppModeProvider>
-            <SidebarProvider>{children}</SidebarProvider>
+            <SidebarProvider>
+                <MainLayout>{children}</MainLayout>
+            </SidebarProvider>
           </AppModeProvider>
         </FirebaseClientProvider>
         <Toaster />

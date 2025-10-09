@@ -14,6 +14,8 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { BottomNav } from './bottom-nav';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from './ui/button';
+import { MainApp } from './main-app';
+
 
 const PatientMenu = () => {
     const { setOpenMobile } = useSidebar();
@@ -83,7 +85,7 @@ const ProviderMenu = () => {
     return (
     <>
         <SidebarMenuItem>
-            <Link href="/" onClick={() => setOpenMobile(false)}>
+            <Link href="/dashboard" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Provider Dashboard">
                     <LayoutDashboard />
                     <span>Dashboard</span>
@@ -151,31 +153,22 @@ const UserProfile = () => {
 
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
-    const { user, userProfile } = useUser();
+    const { user } = useUser();
+    const { isProviderRole, mode } = useAppMode();
     const auth = useAuth();
-    const { mode, isProviderRole } = useAppMode();
-    const pathname = usePathname();
     const { setOpenMobile } = useSidebar();
-    
+
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
-    // Hide sidebar on specific pages for a more immersive experience
-    const pagesWithNoSidebar = ['/symptom-checker', '/mental-health', '/book-service', '/tracking', '/login', '/register', '/register/patient'];
-    const hideSidebar = pagesWithNoSidebar.some(p => pathname.startsWith(p));
-    
-    if (hideSidebar && pathname !== '/') {
-        return <div className="h-full">{children}</div>;
-    }
-
     return (
-        <>
+        <MainApp>
             <Sidebar>
                 <SidebarContent className="flex flex-col p-2">
                     <SidebarHeader className="p-2">
                         <Logo />
                     </SidebarHeader>
                     
-                     {user && !user.isAnonymous && <UserProfile />}
+                    {user && !user.isAnonymous && <UserProfile />}
                     
                     <SidebarMenu className="flex-1 mt-4">
                         {showProviderMenu ? <ProviderMenu /> : <PatientMenu />}
@@ -204,6 +197,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 {!showProviderMenu && <BottomNav />}
             </SidebarInset>
-        </>
+        </MainApp>
     )
 }
