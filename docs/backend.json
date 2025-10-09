@@ -25,6 +25,11 @@
         "phone": {
           "type": "string",
           "description": "Phone number of the user."
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL of the user's profile picture.",
+          "format": "uri"
         }
       },
       "required": [

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,6 +33,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 const profileSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
   phone: z.string().optional(),
+  avatar: z.string().optional(), // For base64 preview
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -43,12 +44,15 @@ export default function EditProfilePage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(userProfile?.avatarUrl);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: '',
       phone: '',
+      avatar: '',
     },
   });
 
@@ -58,18 +62,44 @@ export default function EditProfilePage() {
         name: userProfile.name || '',
         phone: userProfile.phone || '',
       });
+      setAvatarPreview(userProfile.avatarUrl);
     }
   }, [userProfile, form]);
+  
+  useEffect(() => {
+    setAvatarPreview(userProfile?.avatarUrl);
+  }, [userProfile?.avatarUrl]);
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setAvatarPreview(base64String);
+        form.setValue('avatar', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
     if (!user || !firestore) return;
 
     setLoading(true);
     try {
+      // NOTE: In a real app, you would upload the 'data.avatar' (if it's a new base64 string)
+      // to a service like Firebase Storage, get the URL, and then save that URL.
+      // For this prototype, we're only updating the name and phone.
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, {
         name: data.name,
         phone: data.phone,
+        // avatarUrl: uploadedImageUrl, // This would be the URL from storage
       });
 
       toast({
@@ -131,16 +161,23 @@ export default function EditProfilePage() {
             <Card>
               <CardHeader className="items-center">
                 <div className="relative">
-                  <Avatar className="h-24 w-24">
-                     <AvatarImage src={userProfile?.avatarUrl} />
+                  <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
+                     <AvatarImage src={avatarPreview} />
                     <AvatarFallback className="text-3xl">
                       {userProfile?.name?.[0] ?? <UserIcon size={40} />}
                     </AvatarFallback>
                   </Avatar>
-                  <Button size="icon" variant="outline" className="absolute -bottom-1 -right-1 rounded-full border-2 border-background h-8 w-8">
+                  <Button size="icon" variant="outline" className="absolute -bottom-1 -right-1 rounded-full border-2 border-background h-8 w-8 cursor-pointer" onClick={handleAvatarClick}>
                     <Camera className="h-4 w-4"/>
                     <span className="sr-only">Change Photo</span>
                   </Button>
+                   <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    className="hidden"
+                    accept="image/png, image/jpeg, image/jpg"
+                  />
                 </div>
               </CardHeader>
               <CardContent>
