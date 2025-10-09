@@ -15,12 +15,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
-    // Don't show nav/footer on login/register pages
-    const immersivePages = ['/login', '/register', '/register/patient', '/book-service', '/tracking'];
+    // Don't show nav/footer on these pages for an immersive experience
+    const immersivePages = ['/login', '/register', '/register/patient', '/book-service', '/tracking', '/symptom-checker'];
     const isImmersive = immersivePages.some(p => pathname.startsWith(p));
     
     if (isImmersive) {
-        return <main className="flex-1 h-full">{children}</main>;
+        return <main className="h-screen">{children}</main>;
     }
 
     return (
@@ -29,14 +29,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <main className="flex-1">
                 {children}
             </main>
-            <div className="pb-16 md:pb-0">
+            <div className="md:pb-0">
                 {showProviderMenu ? (
                     <AppFooter />
                 ) : (
-                    <>
+                    <div className="pb-16 md:pb-0">
                         <AppFooter />
                         <BottomNav />
-                    </>
+                    </div>
                 )}
             </div>
         </div>
