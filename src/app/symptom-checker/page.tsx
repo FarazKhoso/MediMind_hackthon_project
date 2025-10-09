@@ -1,26 +1,13 @@
 
-'use client';
+import { Suspense } from 'react';
+import { SymptomCheckerClient } from '@/components/symptom-checker-client';
+import { Loader2 } from 'lucide-react';
 
-import { ChatContainer } from "@/components/chat-container";
-import { useSearchParams } from "next/navigation";
-
-// Force dynamic rendering to ensure useSearchParams works correctly during build.
-export const dynamic = 'force-dynamic';
-
+// This is now a server component that uses Suspense.
 export default function SymptomCheckerPage() {
-  const searchParams = useSearchParams();
-  const agent = searchParams.get('agent') || undefined;
-
   return (
-    <div className="flex flex-col h-full">
-       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
-        <h1 className="text-xl font-headline font-bold">
-          {agent ? `${agent} AI Agent` : 'AI Symptom Checker'}
-        </h1>
-       </header>
-      <main className="flex-1 overflow-hidden">
-        <ChatContainer agent={agent} />
-      </main>
-    </div>
+    <Suspense fallback={<div className="flex h-full w-full items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <SymptomCheckerClient />
+    </Suspense>
   );
 }
