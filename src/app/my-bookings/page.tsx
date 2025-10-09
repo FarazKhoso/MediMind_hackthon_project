@@ -74,7 +74,7 @@ export default function MyBookingsPage() {
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
         <h1 className="text-xl font-headline font-bold">My Booking History</h1>
       </header>
-      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-8">
+      <main className="flex-1 overflow-y-auto bg-muted/50 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">
           {bookingsLoading && (
             <div className="flex items-center justify-center p-8">

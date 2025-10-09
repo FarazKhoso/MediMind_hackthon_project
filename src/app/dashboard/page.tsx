@@ -127,7 +127,7 @@ export default function ProviderDashboard() {
         <h1 className="text-xl font-headline font-bold">New Booking Requests</h1>
         <AppHeader />
       </header>
-      <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-8">
+      <main className="flex-1 overflow-y-auto bg-muted/50 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">
           {bookingsLoading && <div className="flex items-center justify-center p-8"><Loader2 className="animate-spin h-6 w-6 text-primary" /></div>}
           
