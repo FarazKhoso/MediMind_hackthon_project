@@ -226,7 +226,7 @@ export default function TrackingPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Booking Details</CardTitle>
-                            </Header>
+                            </CardHeader>
                              <CardContent className="space-y-4 text-sm">
                                 <p><strong>Service:</strong> <span className="capitalize">{booking.serviceType}</span></p>
                                 <p><strong>Final Price:</strong> PKR {booking.finalPrice || booking.bidPrice}</p>
