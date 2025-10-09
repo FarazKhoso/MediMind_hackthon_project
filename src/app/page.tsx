@@ -150,13 +150,8 @@ export default function HomePage() {
   const { mode } = useAppMode();
   const { user } = useUser();
 
-  // If in provider mode, show the dashboard or a provider-specific hero
+  // If in provider mode, always show the provider-specific hero section on the homepage
   if (mode === 'provider') {
-    // If provider is logged in, show their dashboard directly on the homepage
-    if (user && !user.isAnonymous) {
-      return <ProviderDashboard />;
-    }
-    // If logged out but in provider mode, show a specific landing for them
     return <ProviderHeroSection />;
   }
 
