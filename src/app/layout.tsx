@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
 import { AppModeProvider } from '@/hooks/use-app-mode';
 import { MainLayout } from '@/components/main-layout';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'MediMind AI',
@@ -28,9 +29,11 @@ export default function RootLayout({
       <body className="font-body antialiased h-full bg-background">
         <FirebaseClientProvider>
           <AppModeProvider>
-            <MainLayout>
-              {children}
-            </MainLayout>
+            <SidebarProvider>
+              <MainLayout>
+                {children}
+              </MainLayout>
+            </SidebarProvider>
           </AppModeProvider>
         </FirebaseClientProvider>
         <Toaster />

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/symptom-checker', label: 'AI Symptom', icon: Bot },
+  { href: '/symptom-checker', label: 'AI Chat', icon: Bot },
   { href: '/book-service', label: 'Book', icon: HandPlatter },
   { href: '/my-bookings', label: 'Bookings', icon: BookMarked },
 ];
@@ -18,7 +18,7 @@ export function BottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 h-16 bg-card border-t shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)] md:hidden">
-      <div className="grid h-full grid-cols-4">
+      <nav className="grid h-full grid-cols-4">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -37,7 +37,7 @@ export function BottomNav() {
             </Link>
           );
         })}
-      </div>
+      </nav>
     </div>
   );
 }

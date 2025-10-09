@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight, Bot, Stethoscope, Syringe } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Logo } from '@/components/logo';
 
 const featureCards = [
@@ -35,12 +35,14 @@ const featureCards = [
 function PatientLandingPage() {
   return (
     <div className="flex flex-col h-full bg-background">
-       <header className="p-4 border-b bg-card shadow-sm text-center sticky top-0 z-10 backdrop-blur-sm bg-card/80">
-         <Logo />
+       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
+        <div className="container flex h-16 items-center space-x-4">
+          <Logo />
+        </div>
       </header>
       <main className="flex-1 overflow-y-auto">
         {/* Hero Section */}
-        <section className="bg-card/50 text-center py-16 md:py-24 px-4">
+        <section className="bg-card text-center py-16 md:py-24 px-4 border-b">
           <h1 className="text-4xl md:text-5xl font-headline font-bold text-foreground">
             Aapki Sehat, Hamari Fikar
           </h1>
@@ -58,11 +60,11 @@ function PatientLandingPage() {
         </section>
 
         {/* Features Section */}
-        <section className="py-16 md:py-20 px-4">
-            <h2 className="text-3xl font-headline font-bold text-center mb-10">Hamari Services</h2>
-            <div className="max-w-5xl mx-auto grid gap-6 md:grid-cols-3">
+        <section className="py-16 md:py-20 px-4 container">
+            <h2 className="text-3xl font-headline font-bold text-center mb-12">Hamari Services</h2>
+            <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-3">
               {featureCards.map((feature, index) => (
-                <Card key={index} className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <Card key={index} className="text-center shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:-translate-y-2">
                   <CardHeader>
                     <div className="mx-auto bg-primary/10 text-primary w-16 h-16 rounded-full flex items-center justify-center">
                         <feature.icon className="w-8 h-8" />

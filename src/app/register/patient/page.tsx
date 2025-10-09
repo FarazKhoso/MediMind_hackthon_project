@@ -89,12 +89,12 @@ export default function RegisterPatientPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 py-12">
-      <Card className="w-full max-w-lg shadow-2xl">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4 py-12">
+      <Card className="w-full max-w-lg shadow-2xl border-0">
+        <CardHeader className="text-center space-y-4">
+          <Link href="/" className="mx-auto">
             <Logo />
-          </div>
+          </Link>
           <CardTitle className="text-2xl font-headline">Create Your Account</CardTitle>
           <CardDescription>
             Get access to AI-powered health services.
@@ -142,14 +142,14 @@ export default function RegisterPatientPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Create Patient Account
               </Button>
             </form>
           </Form>
         </CardContent>
-         <CardFooter className="flex justify-center">
+         <CardFooter className="flex-col gap-4">
            <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-primary hover:underline">

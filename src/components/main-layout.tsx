@@ -12,7 +12,8 @@ import { useAppMode } from '@/hooks/use-app-mode';
 import { ModeSwitcher } from './mode-switcher';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { BottomNav } from './bottom-nav';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { Button } from './ui/button';
 
 const PatientMenu = () => {
     const { setOpenMobile } = useSidebar();
@@ -111,29 +112,37 @@ const ProviderMenu = () => {
 
 const AuthMenu = ({ mode }: { mode: 'patient' | 'provider' }) => {
     const { setOpenMobile } = useSidebar();
+    const router = useRouter();
+
+    const handleLogin = () => {
+        router.push('/login');
+        setOpenMobile(false);
+    }
+    const handleRegister = () => {
+        const path = mode === 'provider' ? '/register' : '/register/patient';
+        router.push(path);
+        setOpenMobile(false);
+    }
+
     return (
-        <SidebarMenuItem>
-            <Link href="/login" onClick={() => setOpenMobile(false)}>
-                <SidebarMenuButton tooltip="Login">
-                    <LogIn />
-                    <span>Login</span>
-                </SidebarMenuButton>
-            </Link>
-        </SidebarMenuItem>
-    );
+        <div className="flex gap-2 p-2">
+            <Button onClick={handleLogin} className="flex-1">Login</Button>
+            <Button onClick={handleRegister} variant="outline" className="flex-1">Register</Button>
+        </div>
+    )
 };
 
 const UserProfile = () => {
-    const { user } = useUser();
+    const { user, userProfile } = useUser();
     if (!user || user.isAnonymous) return null;
     
     return (
         <div className="flex items-center gap-3 px-2 py-4">
-            <Avatar>
-                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+            <Avatar className="h-10 w-10">
+                <AvatarFallback>{userProfile?.name?.[0].toUpperCase() || user.email?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 overflow-hidden">
-                <p className="font-semibold truncate">{user.displayName || user.email}</p>
+                <p className="font-semibold truncate">{userProfile?.name || user.email}</p>
                 <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
         </div>
@@ -146,37 +155,39 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const auth = useAuth();
     const { mode, isProviderRole } = useAppMode();
     const pathname = usePathname();
+    const { setOpenMobile } = useSidebar();
     
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
     // Hide sidebar on specific pages for a more immersive experience
-    const pagesWithNoSidebar = ['/symptom-checker', '/mental-health', '/book-service', '/tracking'];
+    const pagesWithNoSidebar = ['/symptom-checker', '/mental-health', '/book-service', '/tracking', '/login', '/register', '/register/patient'];
     const hideSidebar = pagesWithNoSidebar.some(p => pathname.startsWith(p));
     
-    if (hideSidebar) {
+    if (hideSidebar && pathname !== '/') {
         return <div className="h-full">{children}</div>;
     }
 
     return (
-        <SidebarProvider>
+        <>
             <Sidebar>
                 <SidebarContent className="flex flex-col p-2">
                     <SidebarHeader className="p-2">
                         <Logo />
                     </SidebarHeader>
                     
+                     {user && !user.isAnonymous && <UserProfile />}
+                    
                     <SidebarMenu className="flex-1 mt-4">
                         {showProviderMenu ? <ProviderMenu /> : <PatientMenu />}
                     </SidebarMenu>
 
                     <SidebarFooter>
-                        {user && !user.isAnonymous && <UserProfile />}
                         <SidebarMenu>
                             {!user || user.isAnonymous ? (
                                 <AuthMenu mode={mode} />
                             ) : (
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton tooltip="Logout" onClick={() => signOut(auth)}>
+                                    <SidebarMenuButton tooltip="Logout" onClick={() => {signOut(auth); setOpenMobile(false);}}>
                                         <LogOut />
                                         <span>Logout</span>
                                     </SidebarMenuButton>
@@ -193,6 +204,6 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 {!showProviderMenu && <BottomNav />}
             </SidebarInset>
-        </SidebarProvider>
+        </>
     )
 }

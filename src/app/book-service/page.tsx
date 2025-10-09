@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useAuth, useFirestore, useUser } from '@/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Loader2, MapPin, DollarSign, Stethoscope, User, Syringe, ArrowLeft } from 'lucide-react';
@@ -80,7 +80,6 @@ export default function BookServicePage() {
     
     const bookingsCollection = collection(firestore, 'bookings');
     
-    // Non-blocking write with custom error handling
     addDoc(bookingsCollection, bookingData)
       .then(docRef => {
         toast({
@@ -90,12 +89,12 @@ export default function BookServicePage() {
         router.push(`/tracking/${docRef.id}`);
       })
       .catch(error => {
-        // Emit a detailed, contextual error for debugging
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: bookingsCollection.path,
-          operation: 'create',
-          requestResourceData: bookingData,
-        }));
+        console.error('Booking failed:', error);
+        toast({
+            variant: 'destructive',
+            title: 'Booking Failed',
+            description: 'Could not send your request. Please try again.'
+        });
       })
       .finally(() => {
         setLoading(false);

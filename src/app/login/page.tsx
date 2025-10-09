@@ -77,12 +77,12 @@ export default function LoginPage() {
   const registrationPath = mode === 'provider' ? '/register' : '/register/patient';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-0">
+        <CardHeader className="text-center space-y-4">
+            <Link href="/" className="mx-auto">
                 <Logo />
-            </div>
+            </Link>
           <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
           <CardDescription>
             Login to your MediMind AI account as a {mode}.
@@ -121,14 +121,14 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex-col gap-4">
             <p className="text-center text-sm text-muted-foreground">
                 Don&apos;t have an account?{' '}
                 <Link href={registrationPath} className="font-semibold text-primary hover:underline">
