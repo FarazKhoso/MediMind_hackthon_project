@@ -56,18 +56,23 @@ export default function EditProfilePage() {
     },
   });
 
+  // Effect to set the initial avatar preview from userProfile
+  useEffect(() => {
+    if (userProfile?.avatarUrl) {
+      setAvatarPreview(userProfile.avatarUrl);
+    }
+  }, [userProfile?.avatarUrl]);
+
+  // Effect to reset form values when userProfile loads, but NOT the avatar
   useEffect(() => {
     if (userProfile) {
       form.reset({
         name: userProfile.name || '',
         phone: userProfile.phone || '',
       });
-       if (avatarPreview === undefined) {
-        setAvatarPreview(userProfile.avatarUrl);
-      }
     }
-  }, [userProfile, form, avatarPreview]);
-  
+  }, [userProfile, form]);
+
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -230,3 +235,4 @@ export default function EditProfilePage() {
     </div>
   );
 }
+
