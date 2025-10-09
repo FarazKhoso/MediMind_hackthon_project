@@ -13,15 +13,15 @@ export function MainApp({ children }: { children: React.ReactNode }) {
     const isImmersive = immersivePages.some(p => pathname.startsWith(p));
 
     if (isImmersive) {
-        return <div className="h-full">{children}</div>;
+        return <main className="h-full">{children}</main>;
     }
 
     return (
-        <div className={cn(
+        <main className={cn(
             "transition-[margin-left] duration-300 ease-in-out",
             !isMobile && open ? "md:ml-64" : "md:ml-0"
         )}>
             {children}
-        </div>
+        </main>
     );
 }

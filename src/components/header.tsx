@@ -48,11 +48,11 @@ export function AppHeader() {
             </div>
         </div>
         
-        <div className="md:hidden">
+        <div className="flex-1 flex justify-center md:hidden">
             <Logo />
         </div>
         
-        <div className="flex-1" />
+        <div className="hidden md:flex md:flex-1" />
 
         <div className="flex items-center gap-3">
           <ModeToggle />
