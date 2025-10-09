@@ -63,15 +63,17 @@ export default function EditProfilePage() {
     }
   }, [userProfile?.avatarUrl]);
 
-  // Effect to reset form values when userProfile loads, but NOT the avatar
+  // Effect to reset form text values when userProfile loads, but NOT the avatar.
   useEffect(() => {
     if (userProfile) {
+      // Use reset to update form values without touching the avatar preview state
       form.reset({
         name: userProfile.name || '',
         phone: userProfile.phone || '',
+        // The 'avatar' field in the form is NOT reset, preserving the preview
       });
     }
-  }, [userProfile, form]);
+  }, [userProfile, form.reset]);
 
 
   const handleAvatarClick = () => {
@@ -98,7 +100,7 @@ export default function EditProfilePage() {
     try {
       // NOTE: In a real app, you would upload the 'data.avatar' (if it's a new base64 string)
       // to a service like Firebase Storage, get the URL, and then save that URL.
-      // We are removing the direct save of the avatar base64 string to Firestore to prevent crashing.
+      // The direct save of the avatar base64 string is removed to prevent crashes from exceeding Firestore's 1MB limit.
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, {
         name: data.name,
