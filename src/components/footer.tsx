@@ -1,8 +1,12 @@
+
+'use client';
+
 import { Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/logo';
+import { useAppMode } from '@/hooks/use-app-mode';
 
-const footerLinks = {
+const patientFooterLinks = {
   'About': [
     { name: 'About Us', href: '#' },
     { name: 'Careers', href: '#' },
@@ -20,6 +24,24 @@ const footerLinks = {
   ],
 };
 
+const providerFooterLinks = {
+  'My Dashboard': [
+    { name: 'New Requests', href: '/dashboard' },
+    { name: 'My Bookings', href: '/provider-bookings' },
+    { name: 'Profile', href: '/profile/edit' },
+  ],
+  'For Patients': [
+    { name: 'Patient Homepage', href: '/' },
+    { name: 'Patient Login', href: '/login' },
+  ],
+  'Support': [
+    { name: 'Help Center', href: '#' },
+    { name: 'Contact Us', href: '#' },
+    { name: 'Privacy Policy', href: '#' },
+    { name: 'Terms of Service', href: '#' },
+  ],
+};
+
 const socialLinks = [
   { icon: Facebook, href: '#' },
   { icon: Twitter, href: '#' },
@@ -28,6 +50,9 @@ const socialLinks = [
 ];
 
 export function AppFooter() {
+  const { mode } = useAppMode();
+  const footerLinks = mode === 'provider' ? providerFooterLinks : patientFooterLinks;
+
   return (
     <footer className="bg-secondary border-t">
       <div className="container py-12">
