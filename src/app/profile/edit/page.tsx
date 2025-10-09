@@ -98,14 +98,11 @@ export default function EditProfilePage() {
     try {
       // NOTE: In a real app, you would upload the 'data.avatar' (if it's a new base64 string)
       // to a service like Firebase Storage, get the URL, and then save that URL.
-      // For this prototype, we're only updating the name and phone.
+      // We are removing the direct save of the avatar base64 string to Firestore to prevent crashing.
       const userDocRef = doc(firestore, 'users', user.uid);
       await updateDoc(userDocRef, {
         name: data.name,
         phone: data.phone,
-        // For prototype purposes, if a new avatar is set, let's save its base64 directly to simulate change.
-        // This is NOT recommended for production.
-        ...(data.avatar ? { avatarUrl: data.avatar } : {}),
       });
 
       toast({
@@ -235,4 +232,3 @@ export default function EditProfilePage() {
     </div>
   );
 }
-
