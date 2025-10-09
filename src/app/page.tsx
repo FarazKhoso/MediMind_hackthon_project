@@ -17,6 +17,10 @@ import { HowItWorks } from '@/components/landing/how-it-works';
 import { DoctorProfilesPreview } from '@/components/landing/doctor-profiles-preview';
 import { Testimonials } from '@/components/landing/testimonials';
 import { FeaturedSpecialties } from '@/components/landing/featured-specialties';
+import { useAppMode } from '@/hooks/use-app-mode';
+import ProviderDashboard from './dashboard/page';
+import { useUser } from '@/firebase';
+import { ProviderHeroSection } from '@/components/landing/provider-hero-section';
 
 const FeatureCard = ({
   icon: Icon,
@@ -44,7 +48,7 @@ const FeatureCard = ({
   </Link>
 );
 
-export default function HomePage() {
+function PatientHomePage() {
   const router = useRouter();
   const { language } = useLanguage();
   const t = translations[language];
@@ -139,4 +143,23 @@ export default function HomePage() {
       </main>
     </div>
   );
+}
+
+
+export default function HomePage() {
+  const { mode } = useAppMode();
+  const { user } = useUser();
+
+  // If in provider mode, show the dashboard or a provider-specific hero
+  if (mode === 'provider') {
+    // If provider is logged in, show their dashboard directly on the homepage
+    if (user && !user.isAnonymous) {
+      return <ProviderDashboard />;
+    }
+    // If logged out but in provider mode, show a specific landing for them
+    return <ProviderHeroSection />;
+  }
+
+  // Otherwise, show the default patient-facing homepage
+  return <PatientHomePage />;
 }
