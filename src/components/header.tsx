@@ -19,7 +19,7 @@ import {
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { useSidebar } from './ui/sidebar';
+import { SidebarTrigger } from './ui/sidebar';
 import { ModeToggle } from './theme-toggle';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
@@ -28,7 +28,6 @@ import { Logo } from './logo';
 export function AppHeader() {
   const { user, userProfile } = useUser();
   const auth = useAuth();
-  const { toggleSidebar } = useSidebar();
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
 
@@ -43,18 +42,14 @@ export function AppHeader() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 items-center">
         <div className="flex items-center gap-2">
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="mr-2"
-            >
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle Sidebar</span>
-            </Button>
+            <SidebarTrigger />
             <div className="hidden md:block">
               <Logo />
             </div>
+        </div>
+        
+        <div className="md:hidden">
+            <Logo />
         </div>
         
         <div className="flex-1" />
@@ -115,7 +110,7 @@ export function AppHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 md:flex">
                 <Button variant="ghost" onClick={() => router.push('/login')}>Sign In</Button>
                 <Button onClick={() => router.push('/register/patient')}>Sign Up</Button>
             </div>

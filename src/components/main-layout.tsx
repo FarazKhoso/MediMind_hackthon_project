@@ -1,6 +1,6 @@
 'use client';
 
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, useSidebar } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 import { Bot, HeartPulse, HandPlatter, LayoutDashboard, BookMarked, Home } from 'lucide-react';
 import Link from 'next/link';
@@ -10,6 +10,7 @@ import { BottomNav } from './bottom-nav';
 import { MainApp } from './main-app';
 import { AppHeader } from './header';
 import { AppFooter } from './footer';
+import { useSidebar } from '@/components/ui/sidebar';
 
 const PatientMenu = () => {
     const { setOpenMobile } = useSidebar();
@@ -84,7 +85,6 @@ const ProviderMenu = () => {
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const { user } = useUser();
     const { isProviderRole, mode } = useAppMode();
-    const { setOpenMobile } = useSidebar();
 
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
@@ -101,16 +101,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     </SidebarMenu>
                 </SidebarContent>
             </Sidebar>
-            <SidebarInset>
-                <div className="flex flex-col min-h-screen">
-                    <AppHeader />
-                    <main className="flex-1">
-                      {children}
-                    </main>
-                    {!showProviderMenu && <BottomNav />}
-                    <AppFooter />
-                </div>
-            </SidebarInset>
+            <div className="relative flex min-h-screen flex-col">
+                <AppHeader />
+                <main className="flex-1 pb-16 md:pb-0">
+                    {children}
+                </main>
+                {!showProviderMenu && (
+                  <>
+                    <div className="hidden md:block">
+                      <AppFooter />
+                    </div>
+                    <BottomNav />
+                  </>
+                )}
+                 {showProviderMenu && <AppFooter />}
+            </div>
         </MainApp>
     )
 }
