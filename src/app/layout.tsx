@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { MainLayout } from '@/components/main-layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
+import { LanguageProvider } from '@/hooks/use-language';
 
 const fontPoppins = Poppins({
   subsets: ['latin'],
@@ -46,14 +47,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <FirebaseClientProvider>
-            <AppModeProvider>
-              <SidebarProvider>
-                <MainLayout>{children}</MainLayout>
-              </SidebarProvider>
-            </AppModeProvider>
-          </FirebaseClientProvider>
-          <Toaster />
+          <LanguageProvider>
+            <FirebaseClientProvider>
+              <AppModeProvider>
+                <SidebarProvider>
+                  <MainLayout>{children}</MainLayout>
+                </SidebarProvider>
+              </AppModeProvider>
+            </FirebaseClientProvider>
+            <Toaster />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LogOut, User, Menu, Settings, Languages } from 'lucide-react';
+import { LogOut, User, Menu, Settings, Languages, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,6 +10,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -17,12 +21,14 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { useSidebar } from './ui/sidebar';
 import { ModeToggle } from './theme-toggle';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/hooks/use-language';
 
 export function AppHeader() {
   const { user, userProfile } = useUser();
   const auth = useAuth();
   const { toggleSidebar } = useSidebar();
   const router = useRouter();
+  const { language, setLanguage } = useLanguage();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -75,10 +81,24 @@ export function AppHeader() {
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                 <DropdownMenuItem>
-                  <Languages className="mr-2 h-4 w-4" />
-                  <span>Roman Urdu</span>
-                </DropdownMenuItem>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Languages className="mr-2 h-4 w-4" />
+                        <span>Language</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuItem onClick={() => setLanguage('en')}>
+                                <Check className={`mr-2 h-4 w-4 ${language === 'en' ? 'opacity-100' : 'opacity-0'}`} />
+                                English
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setLanguage('ur-PK')}>
+                                 <Check className={`mr-2 h-4 w-4 ${language === 'ur-PK' ? 'opacity-100' : 'opacity-0'}`} />
+                                Roman Urdu
+                            </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
