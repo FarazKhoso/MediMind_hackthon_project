@@ -30,14 +30,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 {children}
             </main>
             <div className="md:pb-0">
-                {showProviderMenu ? (
-                    <AppFooter />
-                ) : (
-                    <div className="pb-16 md:pb-0">
-                        <AppFooter />
-                        <BottomNav />
-                    </div>
-                )}
+                 {/* Only show the footer on the homepage */}
+                {pathname === '/' && <AppFooter />}
+                
+                {/* Only show bottom nav for patient mode on non-immersive pages */}
+                {!showProviderMenu && <BottomNav />}
             </div>
         </div>
     )
