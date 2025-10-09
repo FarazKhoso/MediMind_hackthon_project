@@ -30,7 +30,7 @@ const doctors = [
 
 export function DoctorProfilesPreview() {
   return (
-    <section className="py-20 md:py-24">
+    <section className="py-20 md:py-24 bg-secondary/30">
       <div className="container">
         <h2 className="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl">
           Our Top Rated Doctors

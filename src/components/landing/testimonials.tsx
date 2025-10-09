@@ -43,7 +43,7 @@ const Rating = ({ stars }: { stars: number }) => (
 
 export function Testimonials() {
   return (
-    <section className="bg-secondary/50 py-20 md:py-24">
+    <section className="bg-secondary/30 py-20 md:py-24">
       <div className="container">
         <h2 className="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl">
           What Our Patients Say

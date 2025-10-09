@@ -49,7 +49,7 @@ export function HowItWorks() {
   ];
 
   return (
-    <section className="bg-secondary/50 py-20 md:py-24">
+    <section className="bg-background py-20 md:py-24">
       <div className="container">
         <h2 className="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl font-headline">
           {t.title}
@@ -83,7 +83,7 @@ export function HowItWorks() {
             {/* Divider */}
             <div className="relative flex items-center justify-center">
                 <div className="w-full h-px bg-border"></div>
-                <div className="absolute bg-secondary/50 px-4 text-sm text-muted-foreground font-semibold">OR</div>
+                <div className="absolute bg-background px-4 text-sm text-muted-foreground font-semibold">OR</div>
             </div>
 
             {/* Booking Steps */}

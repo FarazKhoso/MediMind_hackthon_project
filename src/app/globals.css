@@ -40,10 +40,10 @@
   }
 
   .dark {
-    --background: 222 70% 12%;
+    --background: 224 71% 4%;
     --foreground: 210 40% 98%;
 
-    --card: 222 70% 14%;
+    --card: 222 70% 8%;
     --card-foreground: 210 40% 98%;
 
     --popover: 224 71% 4%;
