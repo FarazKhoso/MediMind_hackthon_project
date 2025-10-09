@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/hooks/use-language';
+import { translations } from '@/lib/translations';
 
 const FeatureCard = ({
   icon: Icon,
@@ -40,17 +42,46 @@ const FeatureCard = ({
 
 export default function HomePage() {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t = translations[language];
+
+  const features = [
+    {
+      icon: Bot,
+      title: t.home.feature1Title,
+      description: t.home.feature1Description,
+      href: '/symptom-checker',
+    },
+    {
+      icon: HeartPulse,
+      title: t.home.feature2Title,
+      description: t.home.feature2Description,
+      href: '/health-analysis',
+    },
+    {
+      icon: Syringe,
+      title: t.home.feature3Title,
+      description: t.home.feature3Description,
+      href: '/medicine-reminder',
+    },
+    {
+      icon: MessageSquareHeart,
+      title: t.home.feature4Title,
+      description: t.home.feature4Description,
+      href: '/mental-health',
+    },
+  ];
+
   return (
     <div className="flex min-h-full flex-col bg-background">
       <main className="flex-1">
         <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-32">
           <div className="container relative z-10 text-center">
              <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl font-headline">
-              Aapki Sehat, Hamari Fikar.
+              {t.home.title}
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-              AI-powered health services aapke ghar tak. Fori mashwara, home
-              service booking, aur bohat kuch.
+              {t.home.subtitle}
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Button
@@ -59,7 +90,7 @@ export default function HomePage() {
                 onClick={() => router.push('/symptom-checker')}
               >
                 <Bot className="mr-2" />
-                AI Se Baat Karein
+                {t.home.mainCta}
               </Button>
               <Button
                 size="lg"
@@ -68,7 +99,7 @@ export default function HomePage() {
                 onClick={() => router.push('/book-service')}
               >
                 <Stethoscope className="mr-2" />
-                Ghar par Service Book Karein
+                {t.home.secondaryCta}
               </Button>
             </div>
           </div>
@@ -78,37 +109,22 @@ export default function HomePage() {
           <div className="container">
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl font-headline">
-                Hamari Unique AI Services
+                {t.home.featuresTitle}
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-                Technology ki taqat se apni sehat ka khayal rakhein, aasani se.
+                {t.home.featuresSubtitle}
                 </p>
             </div>
             <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-              <FeatureCard
-                icon={Bot}
-                title="AI Symptom Checker"
-                description="Apni alamaat batayein aur fori AI-powered tajziya aur mashwara haasil karein."
-                href="/symptom-checker"
-              />
-              <FeatureCard
-                icon={HeartPulse}
-                title="Health Data Analysis"
-                description="Apne BP, sugar, aur heart rate ka record rakhein aur AI se analysis karwayein."
-                href="/health-analysis"
-              />
-              <FeatureCard
-                icon={Syringe}
-                title="Medicine Reminders"
-                description="Dawa ya vaccine ki yaad-dehani set karein, sirf likh kar ya prescription upload kar ke."
-                href="/medicine-reminder"
-              />
-              <FeatureCard
-                icon={MessageSquareHeart}
-                title="Mental Health Chatbot"
-                description="Stress, anxiety, ya depression par hamare hamdard AI dost se baat karein."
-                href="/mental-health"
-              />
+              {features.map((feature) => (
+                <FeatureCard
+                  key={feature.title}
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                  href={feature.href}
+                />
+              ))}
             </div>
           </div>
         </section>
