@@ -7,7 +7,6 @@ import { AppModeProvider } from '@/hooks/use-app-mode';
 import { Open_Sans, Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { MainLayout } from '@/components/main-layout';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/hooks/use-language';
 
@@ -51,9 +50,7 @@ export default function RootLayout({
           <LanguageProvider>
             <FirebaseClientProvider>
               <AppModeProvider>
-                <SidebarProvider defaultOpen={false}>
-                  <MainLayout>{children}</MainLayout>
-                </SidebarProvider>
+                <MainLayout>{children}</MainLayout>
               </AppModeProvider>
             </FirebaseClientProvider>
             <Toaster />
