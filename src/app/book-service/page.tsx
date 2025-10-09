@@ -22,8 +22,7 @@ import { useAuth, useFirestore, useUser } from '@/firebase';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { Loader2, MapPin, DollarSign, Stethoscope, User, Syringe } from 'lucide-react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Loader2, MapPin, DollarSign, Stethoscope, User, Syringe, ArrowLeft } from 'lucide-react';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -105,9 +104,12 @@ export default function BookServicePage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <div className="absolute top-4 left-4 z-20">
-          <SidebarTrigger />
-      </div>
+       <header className="flex items-center p-4 border-b bg-card shadow-sm z-10 sticky top-0">
+        <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
+          <ArrowLeft />
+        </Button>
+        <h1 className="text-xl font-headline font-bold">Book a Service</h1>
+      </header>
       <main className="flex-1 flex flex-col">
         <div className="flex-1 relative">
             <div className="absolute inset-0 bg-muted flex items-center justify-center">

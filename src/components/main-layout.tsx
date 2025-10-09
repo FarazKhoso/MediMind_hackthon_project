@@ -3,23 +3,34 @@
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, useSidebar } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard, User, LogOut, BookMarked } from 'lucide-react';
+import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard, User, LogOut, BookMarked, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { ModeSwitcher } from './mode-switcher';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { BottomNav } from './bottom-nav';
+import { usePathname } from 'next/navigation';
 
 const PatientMenu = () => {
     const { setOpenMobile } = useSidebar();
     return (
     <>
         <SidebarMenuItem>
+            <Link href="/" onClick={() => setOpenMobile(false)}>
+                <SidebarMenuButton tooltip="Home">
+                    <Home />
+                    <span>Home</span>
+                </SidebarMenuButton>
+            </Link>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
             <Link href="/symptom-checker" onClick={() => setOpenMobile(false)}>
                 <SidebarMenuButton tooltip="Symptom Checker">
                     <Bot />
-                    <span>Symptom Checker</span>
+                    <span>AI Symptom Checker</span>
                 </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
@@ -112,28 +123,54 @@ const AuthMenu = ({ mode }: { mode: 'patient' | 'provider' }) => {
     );
 };
 
+const UserProfile = () => {
+    const { user } = useUser();
+    if (!user || user.isAnonymous) return null;
+    
+    return (
+        <div className="flex items-center gap-3 px-2 py-4">
+            <Avatar>
+                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+                <p className="font-semibold truncate">{user.displayName || user.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+        </div>
+    )
+}
+
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const { user, userProfile } = useUser();
     const auth = useAuth();
     const { mode, isProviderRole } = useAppMode();
+    const pathname = usePathname();
     
-    // Determine which menu to show based on login status and role
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
+
+    // Hide sidebar on specific pages for a more immersive experience
+    const pagesWithNoSidebar = ['/symptom-checker', '/mental-health', '/book-service', '/tracking'];
+    const hideSidebar = pagesWithNoSidebar.some(p => pathname.startsWith(p));
+    
+    if (hideSidebar) {
+        return <div className="h-full">{children}</div>;
+    }
 
     return (
         <SidebarProvider>
             <Sidebar>
-                <SidebarContent className="flex flex-col p-4">
-                    <SidebarHeader>
+                <SidebarContent className="flex flex-col p-2">
+                    <SidebarHeader className="p-2">
                         <Logo />
                     </SidebarHeader>
                     
-                    <SidebarMenu className="flex-1">
+                    <SidebarMenu className="flex-1 mt-4">
                         {showProviderMenu ? <ProviderMenu /> : <PatientMenu />}
                     </SidebarMenu>
 
                     <SidebarFooter>
+                        {user && !user.isAnonymous && <UserProfile />}
                         <SidebarMenu>
                             {!user || user.isAnonymous ? (
                                 <AuthMenu mode={mode} />
@@ -141,7 +178,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                 <SidebarMenuItem>
                                     <SidebarMenuButton tooltip="Logout" onClick={() => signOut(auth)}>
                                         <LogOut />
-                                        <span>Logout ({userProfile?.role})</span>
+                                        <span>Logout</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             )}
@@ -151,7 +188,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 </SidebarContent>
             </Sidebar>
             <SidebarInset>
-                {children}
+                <div className="h-full pb-16 md:pb-0">
+                  {children}
+                </div>
+                {!showProviderMenu && <BottomNav />}
             </SidebarInset>
         </SidebarProvider>
     )
