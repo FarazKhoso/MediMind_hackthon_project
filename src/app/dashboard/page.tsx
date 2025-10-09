@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, User, ShieldAlert, Star, MapPin } from 'lucide-react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { useCollection } from '@/firebase/firestore/use-collection';
@@ -17,6 +16,8 @@ import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { AppHeader } from '@/components/header';
+
 
 export default function ProviderDashboard() {
   const { user, isUserLoading, userProfile } = useUser();
@@ -101,9 +102,9 @@ export default function ProviderDashboard() {
   if (!user || user.isAnonymous || userProfile?.role !== 'provider' || mode !== 'provider') {
     return (
         <div className="flex flex-col h-full">
-            <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
+            <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
                 <h1 className="text-xl font-headline font-bold">Provider Dashboard</h1>
-                <SidebarTrigger />
+                <AppHeader />
             </header>
             <main className="flex-1 flex items-center justify-center p-4">
                 <Alert variant="destructive" className="max-w-md">
@@ -122,9 +123,9 @@ export default function ProviderDashboard() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
+      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
         <h1 className="text-xl font-headline font-bold">New Booking Requests</h1>
-        <SidebarTrigger />
+        <AppHeader />
       </header>
       <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">

@@ -13,7 +13,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from '@/components/ui/input';
 import { Loader2, BellRing, Upload } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { AppHeader } from '@/components/header';
+
 
 type FormData = MedicineReminderInput;
 
@@ -52,9 +53,9 @@ export default function MedicineReminderPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
+      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
         <h1 className="text-xl font-headline font-bold">Medicine & Vaccination Reminders</h1>
-        <SidebarTrigger />
+        <AppHeader />
       </header>
       <main className="flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto grid gap-8 md:grid-cols-2">

@@ -8,7 +8,8 @@ import { Loader2, HandPlatter, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { AppHeader } from '@/components/header';
+
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { getStatusInfo } from '@/lib/booking-status';
@@ -40,9 +41,9 @@ export default function ProviderBookingsPage() {
   if (!user || user.isAnonymous) {
      return (
         <div className="flex flex-col h-full">
-             <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
+             <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
                 <h1 className="text-xl font-headline font-bold">My Assigned Bookings</h1>
-                <SidebarTrigger />
+                <AppHeader />
             </header>
             <main className="flex-1 flex items-center justify-center p-4">
                 <Card className="max-w-md text-center">
@@ -64,9 +65,9 @@ export default function ProviderBookingsPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
+      <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
         <h1 className="text-xl font-headline font-bold">My Assigned Bookings</h1>
-        <SidebarTrigger />
+        <AppHeader />
       </header>
       <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">
