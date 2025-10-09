@@ -11,7 +11,7 @@ import { Loader2, User, ShieldAlert, Star, MapPin } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
 import { AppHeader } from '@/components/header';
@@ -34,13 +34,15 @@ export default function ProviderDashboard() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleAccept = async (bookingId: string) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore || !userProfile) return;
     setUpdatingId(bookingId);
     
     const bookingRef = doc(firestore, 'bookings', bookingId);
     const updateData = {
       status: 'accepted',
       providerId: user.uid,
+      providerName: userProfile.name || 'Verified Provider',
+      providerAvatarUrl: userProfile.avatarUrl || '',
     };
 
     updateDoc(bookingRef, updateData)
@@ -149,14 +151,18 @@ export default function ProviderDashboard() {
                 <CardHeader>
                     <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12 border">
-                            <AvatarFallback><User size={28}/></AvatarFallback>
+                            <AvatarImage src={booking.customerAvatarUrl} alt={booking.customerName} />
+                            <AvatarFallback>{booking.customerName?.[0] ?? 'P'}</AvatarFallback>
                         </Avatar>
                         <div className="flex-grow">
                              <div className="flex justify-between items-center">
-                                <h3 className="font-headline font-semibold capitalize">{booking.serviceType} Request</h3>
+                                <div>
+                                    <h3 className="font-headline font-semibold capitalize">{booking.serviceType} Request</h3>
+                                    <p className="text-sm text-muted-foreground">{booking.customerName}</p>
+                                </div>
                                 <p className="text-xl font-bold text-primary">PKR {booking.bidPrice}</p>
                              </div>
-                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                                 <div className="flex items-center gap-1">
                                     <Star className="w-3 h-3 fill-yellow-400 text-yellow-400"/> 4.9
                                 </div>

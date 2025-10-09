@@ -43,7 +43,7 @@ const serviceTypes = [
 export default function BookServicePage() {
   const [loading, setLoading] = useState(false);
   const firestore = useFirestore();
-  const { user, isUserLoading } = useUser();
+  const { user, userProfile, isUserLoading } = useUser();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -59,7 +59,7 @@ export default function BookServicePage() {
   const onSubmit: SubmitHandler<BookingFormValues> = async (data) => {
     setLoading(true);
 
-    if (!user || !firestore) {
+    if (!user || !firestore || !userProfile) {
       toast({
         variant: 'destructive',
         title: 'Authentication Required',
@@ -72,6 +72,8 @@ export default function BookServicePage() {
 
     const bookingData = {
       customerId: user.uid,
+      customerName: userProfile.name || 'Anonymous User',
+      customerAvatarUrl: userProfile.avatarUrl || '',
       ...data,
       timing: 'now', // Defaulting for new UI
       status: 'requested',

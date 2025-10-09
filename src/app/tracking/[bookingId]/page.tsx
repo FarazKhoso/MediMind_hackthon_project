@@ -6,7 +6,7 @@ import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { doc, updateDoc, collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck, MessageSquare, SendHorizonal, Star, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
@@ -143,7 +143,7 @@ export default function TrackingPage() {
             );
         }
         
-        if(isCustomer && (booking.status === 'requested' || booking.status === 'accepted')) {
+        if(isCustomer && (booking.status === 'requested' || booking.status === 'accepted' || booking.status === 'in_progress')) {
             return (
                 <Button onClick={handleCancelBooking} variant="destructive" className="w-full" size="lg">
                     <XCircle className="mr-2"/> Cancel Booking
@@ -201,6 +201,11 @@ export default function TrackingPage() {
         return null;
     }
 
+    const otherParty = isProvider 
+        ? { name: booking.customerName, avatarUrl: booking.customerAvatarUrl, role: 'Customer' }
+        : { name: booking.providerName, avatarUrl: booking.providerAvatarUrl, role: 'Provider' };
+
+
     return (
         <div className="flex flex-col h-full bg-background">
             <header className="p-4 border-b bg-card shadow-sm text-center">
@@ -230,14 +235,15 @@ export default function TrackingPage() {
                              <CardContent className="space-y-4 text-sm">
                                 <p><strong>Service:</strong> <span className="capitalize">{booking.serviceType}</span></p>
                                 <p><strong>Final Price:</strong> PKR {booking.finalPrice || booking.bidPrice}</p>
-                                {booking.providerId && (
+                                {otherParty.name && (
                                 <div className="flex items-center gap-3 pt-2">
                                     <Avatar>
-                                        <AvatarFallback><User /></AvatarFallback>
+                                        <AvatarImage src={otherParty.avatarUrl} alt={otherParty.name} />
+                                        <AvatarFallback>{otherParty.name?.[0]}</AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <p className="font-semibold">{isProvider ? 'Customer' : 'Provider Assigned'}</p>
-                                        <p className="text-muted-foreground text-xs">{isProvider ? booking.customerId : booking.providerId}</p>
+                                        <p className="font-semibold">{otherParty.role}</p>
+                                        <p className="text-muted-foreground text-xs">{otherParty.name}</p>
                                     </div>
                                 </div>
                                 )}
