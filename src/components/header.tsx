@@ -144,21 +144,114 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="container flex h-16 items-center justify-between">
-        {/* Left Side: Logo */}
-        <div className="flex items-center gap-2">
-           <Logo />
+      <div className="container flex h-16 items-center">
+        {/* Left Side: Logo & Mobile Menu Trigger */}
+        <div className="flex items-center gap-2 md:w-1/4">
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu />
+                <span className="sr-only">Open Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-3/4 p-0 flex flex-col">
+              <div className="p-4 border-b">
+                <Logo />
+              </div>
+              <nav className="flex-1 flex flex-col mt-2">
+                {showProviderMenu ? (
+                  <ProviderNavLinks isMobile onLinkClick={handleMobileLinkClick} />
+                ) : (
+                  <PatientNavLinks isMobile onLinkClick={handleMobileLinkClick} />
+                )}
+              </nav>
+
+              {/* Mobile Actions in Footer of Drawer */}
+              <div className="p-4 border-t mt-auto">
+                {user && !user.isAnonymous ? (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>
+                        {userProfile?.name?.[0] ?? user.email?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-medium leading-none truncate">
+                        {userProfile?.name ?? 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={handleLogout}>
+                      <LogOut />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        router.push('/login');
+                        handleMobileLinkClick();
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        router.push('/register/patient');
+                        handleMobileLinkClick();
+                      }}
+                    >
+                      Sign Up
+                    </Button>
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-4">
+                  <p className="text-sm text-muted-foreground">Settings</p>
+                  <div className="flex items-center gap-2">
+                    <ModeToggle />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Languages />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setLanguage('en')}>
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              language === 'en' ? 'opacity-100' : 'opacity-0'
+                            }`}
+                          />
+                          English
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setLanguage('ur-PK')}>
+                          <Check
+                            className={`mr-2 h-4 w-4 ${
+                              language === 'ur-PK' ? 'opacity-100' : 'opacity-0'
+                            }`}
+                          />
+                          Roman Urdu
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+           <Logo className="hidden md:flex" />
         </div>
 
         {/* Desktop Nav (Centered) */}
-        <nav className="hidden md:flex items-center gap-6 mx-auto">
+        <nav className="hidden md:flex flex-grow items-center justify-center gap-6">
           {showProviderMenu ? <ProviderNavLinks /> : <PatientNavLinks />}
         </nav>
 
-        {/* Right Side: Desktop Actions & Mobile Menu Trigger */}
-        <div className="flex items-center gap-3">
-           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-2">
+        {/* Right Side: Desktop Actions */}
+        <div className="hidden md:flex items-center justify-end gap-2 md:w-1/4">
             <ModeToggle />
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -230,85 +323,11 @@ export function AppHeader() {
               </div>
             )}
           </div>
-
-          {/* Mobile Menu Trigger */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu />
-                <span className="sr-only">Open Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-3/4 p-0 flex flex-col">
-               <div className="p-4 border-b">
-                <Logo />
-              </div>
-              <nav className="flex-1 flex flex-col mt-2">
-                {showProviderMenu ? (
-                  <ProviderNavLinks isMobile onLinkClick={handleMobileLinkClick} />
-                ) : (
-                  <PatientNavLinks isMobile onLinkClick={handleMobileLinkClick} />
-                )}
-              </nav>
-
-              {/* Mobile Actions in Footer of Drawer */}
-               <div className="p-4 border-t mt-auto">
-                    {user && !user.isAnonymous ? (
-                         <div className="flex items-center gap-3">
-                             <Avatar className="h-10 w-10">
-                                <AvatarFallback>
-                                    {userProfile?.name?.[0] ?? user.email?.[0]}
-                                </AvatarFallback>
-                             </Avatar>
-                             <div className="flex-1">
-                                 <p className="text-sm font-medium leading-none">
-                                    {userProfile?.name ?? 'User'}
-                                 </p>
-                                 <p className="text-xs leading-none text-muted-foreground truncate">
-                                    {user.email}
-                                 </p>
-                             </div>
-                             <Button variant="ghost" size="icon" onClick={handleLogout}>
-                                 <LogOut/>
-                             </Button>
-                         </div>
-                    ) : (
-                         <div className="grid grid-cols-2 gap-2">
-                            <Button variant="outline" onClick={() => {router.push('/login'); handleMobileLinkClick();}}>
-                                Sign In
-                            </Button>
-                            <Button onClick={() => {router.push('/register/patient'); handleMobileLinkClick();}}>
-                                Sign Up
-                            </Button>
-                         </div>
-                    )}
-                  <div className="flex justify-between items-center mt-4">
-                     <p className="text-sm text-muted-foreground">Settings</p>
-                    <div className="flex items-center gap-2">
-                      <ModeToggle />
-                       <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                  <Languages />
-                              </Button>
-                          </DropdownMenuTrigger>
-                           <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setLanguage('en')}>
-                                  <Check className={`mr-2 h-4 w-4 ${language === 'en' ? 'opacity-100' : 'opacity-0'}`} />
-                                  English
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setLanguage('ur-PK')}>
-                                   <Check className={`mr-2 h-4 w-4 ${language === 'ur-PK' ? 'opacity-100' : 'opacity-0'}`} />
-                                  Roman Urdu
-                              </DropdownMenuItem>
-                          </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
+           {/* Mobile Logo (centered when menu is open) */}
+           <div className="flex-grow flex justify-center md:hidden">
+              <Logo />
+           </div>
+           <div className="w-10 md:hidden"></div>
       </div>
     </header>
   );
