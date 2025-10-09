@@ -86,9 +86,9 @@
   .dark body {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(at 20% 20%, hsla(260, 80%, 40%, 0.3) 0px, transparent 50%),
-      radial-gradient(at 80% 20%, hsla(180, 70%, 35%, 0.3) 0px, transparent 50%),
-      radial-gradient(at 20% 80%, hsla(195, 85%, 41%, 0.3) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, hsla(280, 70%, 45%, 0.3) 0px, transparent 50%);
+      radial-gradient(at 20% 20%, hsla(195, 85%, 41%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 20%, hsla(224, 71%, 4%, 0) 0px, transparent 50%),
+      radial-gradient(at 20% 80%, hsla(195, 75%, 55%, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, hsla(224, 71%, 10%, 0.2) 0px, transparent 50%);
   }
 }
