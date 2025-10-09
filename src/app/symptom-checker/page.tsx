@@ -2,9 +2,10 @@
 'use client';
 
 import { ChatContainer } from "@/components/chat-container";
-import { AppHeader } from "@/components/header";
 import { useSearchParams } from "next/navigation";
 
+// Force dynamic rendering to ensure useSearchParams works correctly.
+export const dynamic = 'force-dynamic';
 
 export default function SymptomCheckerPage() {
   const searchParams = useSearchParams();
