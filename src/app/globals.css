@@ -13,8 +13,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 195 85% 38%; /* Professional Blue */
-    --primary-foreground: 0 0% 100%; /* Pure White */
+    --primary: 195 85% 41%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -41,13 +41,13 @@
   }
 
   .dark {
-    --background: 220 13% 10%; /* Deep Blue-Gray */
+    --background: 224 71% 4%;
     --foreground: 210 40% 98%;
 
-    --card: 220 13% 12%;
+    --card: 224 71% 8%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 220 13% 10%;
+    --popover: 224 71% 4%;
     --popover-foreground: 210 40% 98%;
 
     --primary: 195 75% 55%;
@@ -83,5 +83,9 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .dark body {
+    background-color: hsl(var(--background));
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, hsl(195, 85%, 38%, 0.3), transparent);
   }
 }
