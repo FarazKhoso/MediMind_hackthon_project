@@ -40,10 +40,10 @@
   }
 
   .dark {
-    --background: 224 71% 4%;
+    --background: 222 70% 12%;
     --foreground: 210 40% 98%;
 
-    --card: 224 71% 8%;
+    --card: 222 70% 14%;
     --card-foreground: 210 40% 98%;
 
     --popover: 224 71% 4%;
@@ -86,9 +86,9 @@
   .dark body {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(at 20% 20%, hsla(195, 85%, 41%, 0.15) 0px, transparent 50%),
+      radial-gradient(at 20% 20%, hsla(195, 85%, 41%, 0.25) 0px, transparent 50%),
       radial-gradient(at 80% 20%, hsla(224, 71%, 4%, 0) 0px, transparent 50%),
-      radial-gradient(at 20% 80%, hsla(195, 75%, 55%, 0.1) 0px, transparent 50%),
-      radial-gradient(at 80% 80%, hsla(224, 71%, 10%, 0.2) 0px, transparent 50%);
+      radial-gradient(at 20% 80%, hsla(195, 75%, 55%, 0.2) 0px, transparent 50%),
+      radial-gradient(at 80% 80%, hsla(222, 70%, 12%, 0) 0px, transparent 50%);
   }
 }
