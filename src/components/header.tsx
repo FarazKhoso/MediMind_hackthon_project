@@ -9,6 +9,7 @@ import {
   Settings,
   Languages,
   Check,
+  Edit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -178,23 +179,32 @@ export function AppHeader() {
               <div className="p-4 border-t mt-auto">
                 <ModeSwitcher />
                 {user && !user.isAnonymous ? (
-                  <div className="flex items-center gap-3 mt-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={userProfile?.avatarUrl} />
-                      <AvatarFallback>
-                        {userProfile?.name?.[0] ?? user.email?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-medium leading-none truncate">
-                        {userProfile?.name ?? 'User'}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground truncate">
-                        {user.email}
-                      </p>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 mt-4">
+                        <Avatar className="h-10 w-10">
+                        <AvatarImage src={userProfile?.avatarUrl} />
+                        <AvatarFallback>
+                            {userProfile?.name?.[0] ?? user.email?.[0]}
+                        </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 overflow-hidden">
+                        <p className="text-sm font-medium leading-none truncate">
+                            {userProfile?.name ?? 'User'}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground truncate">
+                            {user.email}
+                        </p>
+                        </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={handleLogout}>
-                      <LogOut />
+                     {isProviderRole && (
+                      <Button variant="outline" className="w-full justify-start" onClick={() => {router.push('/profile/edit'); handleMobileLinkClick(); }}>
+                        <Edit className="mr-2 h-4 w-4"/>
+                        Edit Profile
+                      </Button>
+                    )}
+                    <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600" onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4"/>
+                      Logout
                     </Button>
                   </div>
                 ) : (
@@ -343,7 +353,9 @@ export function AppHeader() {
           </div>
            {/* Mobile Logo (centered when menu is open) */}
            <div className="flex-grow flex justify-center md:hidden">
-              <Logo />
+              <Link href="/">
+                <Logo />
+              </Link>
            </div>
            <div className="w-10 md:hidden"></div>
       </div>
