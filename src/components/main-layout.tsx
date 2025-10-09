@@ -1,21 +1,15 @@
-
 'use client';
 
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarFooter, useSidebar } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { Bot, HeartPulse, LogIn, MessageSquareHeart, Stethoscope, Syringe, UserPlus, HandPlatter, LayoutDashboard, User, LogOut, BookMarked, Home } from 'lucide-react';
+import { Bot, HeartPulse, HandPlatter, LayoutDashboard, BookMarked, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/firebase';
-import { signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase';
 import { useAppMode } from '@/hooks/use-app-mode';
-import { ModeSwitcher } from './mode-switcher';
-import { Avatar, AvatarFallback } from './ui/avatar';
 import { BottomNav } from './bottom-nav';
-import { usePathname, useRouter } from 'next/navigation';
-import { Button } from './ui/button';
 import { MainApp } from './main-app';
-
+import { AppHeader } from './header';
+import { AppFooter } from './footer';
 
 const PatientMenu = () => {
     const { setOpenMobile } = useSidebar();
@@ -53,30 +47,6 @@ const PatientMenu = () => {
                 </SidebarMenuButton>
             </Link>
         </SidebarMenuItem>
-        <SidebarMenuItem>
-            <Link href="/health-analysis" onClick={() => setOpenMobile(false)}>
-                <SidebarMenuButton tooltip="Health Analysis">
-                    <Stethoscope />
-                    <span>Health Analysis</span>
-                </SidebarMenuButton>
-            </Link>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-            <Link href="/medicine-reminder" onClick={() => setOpenMobile(false)}>
-                <SidebarMenuButton tooltip="Reminders">
-                    <Syringe />
-                    <span>Reminders</span>
-                </SidebarMenuButton>
-            </Link>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-            <Link href="/mental-health" onClick={() => setOpenMobile(false)}>
-                <SidebarMenuButton tooltip="Mental Health">
-                    <MessageSquareHeart />
-                    <span>Mental Health</span>
-                </SidebarMenuButton>
-            </Link>
-        </SidebarMenuItem>
     </>
 )};
 
@@ -111,51 +81,9 @@ const ProviderMenu = () => {
     </>
 )};
 
-
-const AuthMenu = ({ mode }: { mode: 'patient' | 'provider' }) => {
-    const { setOpenMobile } = useSidebar();
-    const router = useRouter();
-
-    const handleLogin = () => {
-        router.push('/login');
-        setOpenMobile(false);
-    }
-    const handleRegister = () => {
-        const path = mode === 'provider' ? '/register' : '/register/patient';
-        router.push(path);
-        setOpenMobile(false);
-    }
-
-    return (
-        <div className="flex gap-2 p-2">
-            <Button onClick={handleLogin} className="flex-1">Login</Button>
-            <Button onClick={handleRegister} variant="outline" className="flex-1">Register</Button>
-        </div>
-    )
-};
-
-const UserProfile = () => {
-    const { user, userProfile } = useUser();
-    if (!user || user.isAnonymous) return null;
-    
-    return (
-        <div className="flex items-center gap-3 px-2 py-4">
-            <Avatar className="h-10 w-10">
-                <AvatarFallback>{userProfile?.name?.[0].toUpperCase() || user.email?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 overflow-hidden">
-                <p className="font-semibold truncate">{userProfile?.name || user.email}</p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            </div>
-        </div>
-    )
-}
-
-
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const { user } = useUser();
     const { isProviderRole, mode } = useAppMode();
-    const auth = useAuth();
     const { setOpenMobile } = useSidebar();
 
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
@@ -168,34 +96,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <Logo />
                     </SidebarHeader>
                     
-                    {user && !user.isAnonymous && <UserProfile />}
-                    
                     <SidebarMenu className="flex-1 mt-4">
                         {showProviderMenu ? <ProviderMenu /> : <PatientMenu />}
                     </SidebarMenu>
-
-                    <SidebarFooter>
-                        <SidebarMenu>
-                            {!user || user.isAnonymous ? (
-                                <AuthMenu mode={mode} />
-                            ) : (
-                                <SidebarMenuItem>
-                                    <SidebarMenuButton tooltip="Logout" onClick={() => {signOut(auth); setOpenMobile(false);}}>
-                                        <LogOut />
-                                        <span>Logout</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            )}
-                        </SidebarMenu>
-                        <ModeSwitcher />
-                    </SidebarFooter>
                 </SidebarContent>
             </Sidebar>
             <SidebarInset>
-                <div className="h-full pb-16 md:pb-0">
-                  {children}
+                <div className="flex flex-col min-h-screen">
+                    <AppHeader />
+                    <main className="flex-1">
+                      {children}
+                    </main>
+                    {!showProviderMenu && <BottomNav />}
+                    <AppFooter />
                 </div>
-                {!showProviderMenu && <BottomNav />}
             </SidebarInset>
         </MainApp>
     )

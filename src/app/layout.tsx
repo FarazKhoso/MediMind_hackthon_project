@@ -7,6 +7,7 @@ import { Open_Sans, Poppins } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { MainLayout } from '@/components/main-layout';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const fontPoppins = Poppins({
   subsets: ['latin'],
@@ -31,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full" suppressHydrationWarning>
       <body
         className={cn(
           'min-h-screen bg-background font-body antialiased',
@@ -39,14 +40,21 @@ export default function RootLayout({
           fontOpenSans.variable
         )}
       >
-        <FirebaseClientProvider>
-          <AppModeProvider>
-            <SidebarProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <FirebaseClientProvider>
+            <AppModeProvider>
+              <SidebarProvider>
                 <MainLayout>{children}</MainLayout>
-            </SidebarProvider>
-          </AppModeProvider>
-        </FirebaseClientProvider>
-        <Toaster />
+              </SidebarProvider>
+            </AppModeProvider>
+          </FirebaseClientProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

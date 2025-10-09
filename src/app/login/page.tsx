@@ -62,7 +62,8 @@ export default function LoginPage() {
         title: 'Login Successful',
         description: 'Welcome back!',
       });
-      router.push('/'); // Redirect to home page after login
+      const redirectPath = mode === 'provider' ? '/dashboard' : '/';
+      router.push(redirectPath); 
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -73,70 +74,73 @@ export default function LoginPage() {
     setLoading(false);
   };
 
-  // The registration path is now determined by the current mode.
   const registrationPath = mode === 'provider' ? '/register' : '/register/patient';
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0">
-        <CardHeader className="text-center space-y-4">
-            <Link href="/" className="mx-auto">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+            <Link href="/" className="inline-block">
                 <Logo />
             </Link>
-          <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
-          <CardDescription>
-            Login to your MediMind AI account as a {mode}.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="you@example.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Login
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex-col gap-4">
-            <p className="text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{' '}
-                <Link href={registrationPath} className="font-semibold text-primary hover:underline">
-                  Register
-                </Link>
-            </p>
-        </CardFooter>
-      </Card>
+        </div>
+        <Card className="w-full shadow-2xl border-0">
+            <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
+            <CardDescription>
+                Login to your MediMind AI {mode} account.
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                        <Input
+                            type="email"
+                            placeholder="you@example.com"
+                            {...field}
+                        />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Login
+                </Button>
+                </form>
+            </Form>
+            </CardContent>
+            <CardFooter className="flex-col gap-4">
+                <p className="text-center text-sm text-muted-foreground">
+                    Don&apos;t have an account?{' '}
+                    <Link href={registrationPath} className="font-semibold text-primary hover:underline">
+                    Register
+                    </Link>
+                </p>
+            </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

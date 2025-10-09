@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  ArrowRight,
   Bot,
   Stethoscope,
   Syringe,
@@ -24,7 +23,7 @@ const FeatureCard = ({
   description: string;
   href: string;
 }) => (
-  <Link href={href}>
+  <Link href={href} className="block h-full">
     <Card className="group h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-primary/50">
       <CardHeader>
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-accent text-primary transition-colors group-hover:bg-primary group-hover:text-accent">
@@ -44,19 +43,19 @@ export default function HomePage() {
   return (
     <div className="flex min-h-full flex-col bg-background">
       <main className="flex-1">
-        <section className="relative overflow-hidden bg-gradient-to-b from-accent/20 via-background to-background py-20 md:py-32">
+        <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-20 md:py-32">
           <div className="container relative z-10 text-center">
-            <h1 className="text-4xl font-bold leading-tight tracking-tighter text-foreground md:text-5xl lg:text-6xl">
+             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl font-headline">
               Aapki Sehat, Hamari Fikar.
             </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-foreground/70">
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
               AI-powered health services aapke ghar tak. Fori mashwara, home
               service booking, aur bohat kuch.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <Button
                 size="lg"
-                className="h-12 text-base"
+                className="h-12 text-base font-bold"
                 onClick={() => router.push('/symptom-checker')}
               >
                 <Bot className="mr-2" />
@@ -65,11 +64,11 @@ export default function HomePage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="h-12 text-base"
+                className="h-12 text-base font-bold"
                 onClick={() => router.push('/book-service')}
               >
                 <Stethoscope className="mr-2" />
-                Doctor Book Karein
+                Ghar par Service Book Karein
               </Button>
             </div>
           </div>
@@ -77,13 +76,15 @@ export default function HomePage() {
 
         <section className="py-20 md:py-24">
           <div className="container">
-            <h2 className="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-              Hamari Unique AI Services
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-center text-lg text-foreground/70">
-              Technology ki taqat se apni sehat ka khayal rakhein, aasani se.
-            </p>
-            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="text-center">
+                <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl font-headline">
+                Hamari Unique AI Services
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
+                Technology ki taqat se apni sehat ka khayal rakhein, aasani se.
+                </p>
+            </div>
+            <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
               <FeatureCard
                 icon={Bot}
                 title="AI Symptom Checker"

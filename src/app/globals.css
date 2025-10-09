@@ -4,17 +4,17 @@
 
 @layer base {
   :root {
-    --background: 240 10% 99%; /* Almost white */
-    --foreground: 240 10% 3.9%;
+    --background: 240 10% 99%; /* Softer White */
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 240 10% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 240 10% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 195 83% 41%; /* A strong, trustworthy blue */
-    --primary-foreground: 0 0% 100%;
+    --primary: 195, 85%, 41%; /* Professional Blue */
+    --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,15 +22,15 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 195 91% 93%; /* A very light blue for accents */
-    --accent-foreground: 195 83% 21%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 195 83% 41%;
+    --ring: 195, 85%, 41%;
 
     --radius: 0.75rem;
     --chart-1: 12 76% 61%;
@@ -50,8 +50,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 195 77% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 195, 75%, 55%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -67,8 +67,8 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 195 77% 50%;
-    
+    --ring: 195, 75%, 55%;
+
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
