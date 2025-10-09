@@ -7,7 +7,7 @@ import {
   SheetHeader,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -49,6 +49,7 @@ export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
         <SheetHeader className="p-6 pb-4 border-b">
            <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
+                <AvatarImage src={userProfile?.avatarUrl} />
                 <AvatarFallback className="text-2xl">
                 {userProfile?.name?.[0] ?? user.email?.[0]}
                 </AvatarFallback>

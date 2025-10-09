@@ -45,7 +45,7 @@ export default function EditProfilePage() {
   const { toast } = useToast();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(userProfile?.avatarUrl);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(undefined);
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -62,13 +62,12 @@ export default function EditProfilePage() {
         name: userProfile.name || '',
         phone: userProfile.phone || '',
       });
-      setAvatarPreview(userProfile.avatarUrl);
+       if (avatarPreview === undefined) {
+        setAvatarPreview(userProfile.avatarUrl);
+      }
     }
-  }, [userProfile, form]);
+  }, [userProfile, form, avatarPreview]);
   
-  useEffect(() => {
-    setAvatarPreview(userProfile?.avatarUrl);
-  }, [userProfile?.avatarUrl]);
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -99,7 +98,9 @@ export default function EditProfilePage() {
       await updateDoc(userDocRef, {
         name: data.name,
         phone: data.phone,
-        // avatarUrl: uploadedImageUrl, // This would be the URL from storage
+        // For prototype purposes, if a new avatar is set, let's save its base64 directly to simulate change.
+        // This is NOT recommended for production.
+        ...(data.avatar ? { avatarUrl: data.avatar } : {}),
       });
 
       toast({

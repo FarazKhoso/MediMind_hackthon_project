@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ModeToggle } from './theme-toggle';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
@@ -173,6 +173,7 @@ export function AppHeader() {
                 {user && !user.isAnonymous ? (
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
+                      <AvatarImage src={userProfile?.avatarUrl} />
                       <AvatarFallback>
                         {userProfile?.name?.[0] ?? user.email?.[0]}
                       </AvatarFallback>
@@ -282,6 +283,7 @@ export function AppHeader() {
                       className="relative h-10 w-10 rounded-full"
                     >
                       <Avatar className="h-10 w-10">
+                        <AvatarImage src={userProfile?.avatarUrl} />
                         <AvatarFallback>
                           {userProfile?.name?.[0] ?? user.email?.[0]}
                         </AvatarFallback>
