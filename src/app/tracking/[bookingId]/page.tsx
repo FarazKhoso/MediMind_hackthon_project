@@ -196,7 +196,7 @@ export default function TrackingPage() {
                         ))}
                     </CardContent>
                 </Card>
-            )
+            );
         }
         return null;
     }
