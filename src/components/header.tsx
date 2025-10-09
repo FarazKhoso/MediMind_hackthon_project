@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -19,10 +20,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
@@ -148,8 +145,93 @@ export function AppHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
-        {/* Left Side: Logo & Mobile Menu Trigger */}
+        {/* Left Side: Logo */}
         <div className="flex items-center gap-2">
+           <Logo />
+        </div>
+
+        {/* Desktop Nav (Centered) */}
+        <nav className="hidden md:flex items-center gap-6 mx-auto">
+          {showProviderMenu ? <ProviderNavLinks /> : <PatientNavLinks />}
+        </nav>
+
+        {/* Right Side: Desktop Actions & Mobile Menu Trigger */}
+        <div className="flex items-center gap-3">
+           {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-2">
+            <ModeToggle />
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Languages />
+                    </Button>
+                </DropdownMenuTrigger>
+                 <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setLanguage('en')}>
+                        <Check className={`mr-2 h-4 w-4 ${language === 'en' ? 'opacity-100' : 'opacity-0'}`} />
+                        English
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setLanguage('ur-PK')}>
+                         <Check className={`mr-2 h-4 w-4 ${language === 'ur-PK' ? 'opacity-100' : 'opacity-0'}`} />
+                        Roman Urdu
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+             {user && !user.isAnonymous ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>
+                        {userProfile?.name?.[0] ?? user.email?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {userProfile?.name ?? 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={() => router.push('/login')}>
+                  Sign In
+                </Button>
+                <Button onClick={() => router.push('/register/patient')}>
+                  Sign Up
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Trigger */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon">
@@ -157,20 +239,51 @@ export function AppHeader() {
                 <span className="sr-only">Open Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-3/4 p-0">
-              <div className="p-4 border-b">
+            <SheetContent side="left" className="w-3/4 p-0 flex flex-col">
+               <div className="p-4 border-b">
                 <Logo />
               </div>
-              <nav className="flex flex-col mt-2">
+              <nav className="flex-1 flex flex-col mt-2">
                 {showProviderMenu ? (
                   <ProviderNavLinks isMobile onLinkClick={handleMobileLinkClick} />
                 ) : (
                   <PatientNavLinks isMobile onLinkClick={handleMobileLinkClick} />
                 )}
               </nav>
-               <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
-                  <div className="flex justify-between items-center">
-                     <p className="text-sm text-muted-foreground">Appearance & Language</p>
+
+              {/* Mobile Actions in Footer of Drawer */}
+               <div className="p-4 border-t mt-auto">
+                    {user && !user.isAnonymous ? (
+                         <div className="flex items-center gap-3">
+                             <Avatar className="h-10 w-10">
+                                <AvatarFallback>
+                                    {userProfile?.name?.[0] ?? user.email?.[0]}
+                                </AvatarFallback>
+                             </Avatar>
+                             <div className="flex-1">
+                                 <p className="text-sm font-medium leading-none">
+                                    {userProfile?.name ?? 'User'}
+                                 </p>
+                                 <p className="text-xs leading-none text-muted-foreground truncate">
+                                    {user.email}
+                                 </p>
+                             </div>
+                             <Button variant="ghost" size="icon" onClick={handleLogout}>
+                                 <LogOut/>
+                             </Button>
+                         </div>
+                    ) : (
+                         <div className="grid grid-cols-2 gap-2">
+                            <Button variant="outline" onClick={() => {router.push('/login'); handleMobileLinkClick();}}>
+                                Sign In
+                            </Button>
+                            <Button onClick={() => {router.push('/register/patient'); handleMobileLinkClick();}}>
+                                Sign Up
+                            </Button>
+                         </div>
+                    )}
+                  <div className="flex justify-between items-center mt-4">
+                     <p className="text-sm text-muted-foreground">Settings</p>
                     <div className="flex items-center gap-2">
                       <ModeToggle />
                        <DropdownMenu>
@@ -195,87 +308,6 @@ export function AppHeader() {
               </div>
             </SheetContent>
           </Sheet>
-          <Logo />
-        </div>
-
-        {/* Desktop Nav (Centered) */}
-        <nav className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
-          {showProviderMenu ? <ProviderNavLinks /> : <PatientNavLinks />}
-        </nav>
-
-        {/* Right Side: Actions */}
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2">
-            <ModeToggle />
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                        <Languages />
-                    </Button>
-                </DropdownMenuTrigger>
-                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setLanguage('en')}>
-                        <Check className={`mr-2 h-4 w-4 ${language === 'en' ? 'opacity-100' : 'opacity-0'}`} />
-                        English
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setLanguage('ur-PK')}>
-                         <Check className={`mr-2 h-4 w-4 ${language === 'ur-PK' ? 'opacity-100' : 'opacity-0'}`} />
-                        Roman Urdu
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          {user && !user.isAnonymous ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-10 w-10 rounded-full"
-                >
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback>
-                      {userProfile?.name?.[0] ?? user.email?.[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {userProfile?.name ?? 'User'}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => router.push('/login')}>
-                Sign In
-              </Button>
-              <Button onClick={() => router.push('/register/patient')}>
-                Sign Up
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     </header>
