@@ -4,7 +4,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
 import { doc, updateDoc, collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck, MessageSquare, SendHorizonal, Star, XCircle } from 'lucide-react';
+import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck, MessageSquare, SendHorizonal, Star, XCircle, Hourglass, Car, CircleDotDashed } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -15,17 +15,64 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { getStatusInfo } from '@/lib/booking-status';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
-// Mock map component for tracking
-const TrackingMap = () => (
-    <div className="h-80 bg-muted rounded-md flex items-center justify-center my-4">
-        <div className="text-center text-muted-foreground">
-            <MapPin className="mx-auto h-12 w-12" />
-            <p>Live tracking map placeholder</p>
-            <p className="text-xs">Provider is 5 minutes away.</p>
+const bookingStatuses = ['requested', 'accepted', 'in_progress', 'completed'];
+
+const StatusTimeline = ({ currentStatus }: { currentStatus: string }) => {
+    const currentIndex = bookingStatuses.indexOf(currentStatus);
+
+    const getStatusDetails = (status: string) => {
+        switch (status) {
+            case 'requested':
+                return { icon: Hourglass, label: 'Booking Requested' };
+            case 'accepted':
+                return { icon: ShieldCheck, label: 'Provider Assigned' };
+            case 'in_progress':
+                return { icon: Car, label: 'Provider En Route' };
+            case 'completed':
+                return { icon: CheckCircle, label: 'Service Completed' };
+            default:
+                return { icon: CircleDotDashed, label: 'Unknown' };
+        }
+    };
+    
+    return (
+        <div className="flex justify-between items-start text-center text-xs sm:text-sm my-4">
+            {bookingStatuses.map((status, index) => {
+                const isActive = index === currentIndex;
+                const isCompleted = index < currentIndex;
+                const details = getStatusDetails(status);
+
+                return (
+                    <div key={status} className="relative flex-1 flex flex-col items-center">
+                        {/* Connecting Line */}
+                        {index > 0 && (
+                            <div className={cn(
+                                "absolute top-[18px] right-1/2 w-full h-0.5",
+                                isCompleted || isActive ? 'bg-primary' : 'bg-border'
+                            )} />
+                        )}
+
+                        <div className={cn(
+                            "relative z-10 w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                            isCompleted || isActive ? 'bg-primary border-primary text-primary-foreground' : 'bg-background border-border text-muted-foreground'
+                        )}>
+                            <details.icon className="h-5 w-5" />
+                        </div>
+                        <p className={cn(
+                            "mt-2 font-semibold",
+                            isActive ? 'text-primary' : (isCompleted ? 'text-foreground' : 'text-muted-foreground')
+                        )}>
+                            {details.label}
+                        </p>
+                    </div>
+                );
+            })}
         </div>
-    </div>
-);
+    );
+};
+
 
 const ChatBubble = ({ message, role, userRole }: { message: string, role: 'customer' | 'provider' | string, userRole: 'customer' | 'provider' | undefined }) => (
     <div className={`flex ${role === userRole ? 'justify-end' : 'justify-start'}`}>
@@ -225,7 +272,7 @@ export default function TrackingPage() {
                                 </Badge>
                              </CardHeader>
                              <CardContent>
-                                <TrackingMap />
+                                <StatusTimeline currentStatus={booking.status} />
                              </CardContent>
                         </Card>
                         <Card>
