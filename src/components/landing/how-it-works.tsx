@@ -1,35 +1,40 @@
 
-import { Search, Calendar, CheckCircle } from 'lucide-react';
+'use client';
 
-const steps = [
-  {
-    icon: Search,
-    title: 'Search for Doctor',
-    description:
-      'Find the best doctors, clinics, and hospitals in your city.',
-  },
-  {
-    icon: Calendar,
-    title: 'Choose Time Slot',
-    description: 'Select a convenient time slot that fits your schedule.',
-  },
-  {
-    icon: CheckCircle,
-    title: 'Book Instantly',
-    description:
-      'Confirm your appointment with a single click and get a confirmation.',
-  },
-];
+import { Search, Calendar, CheckCircle } from 'lucide-react';
+import { useLanguage } from '@/hooks/use-language';
+import { translations } from '@/lib/translations';
 
 export function HowItWorks() {
+  const { language } = useLanguage();
+  const t = translations[language].home.howItWorks;
+
+  const steps = [
+    {
+      icon: Search,
+      title: t.step1Title,
+      description: t.step1Description,
+    },
+    {
+      icon: Calendar,
+      title: t.step2Title,
+      description: t.step2Description,
+    },
+    {
+      icon: CheckCircle,
+      title: t.step3Title,
+      description: t.step3Description,
+    },
+  ];
+
   return (
     <section className="bg-secondary/50 py-20 md:py-24">
       <div className="container">
         <h2 className="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl font-headline">
-          How It Works
+          {t.title}
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-center text-lg text-muted-foreground">
-          Booking an appointment is easy and takes just 3 simple steps.
+          {t.subtitle}
         </p>
         <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
           {steps.map((step, index) => (
