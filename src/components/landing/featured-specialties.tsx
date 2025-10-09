@@ -24,12 +24,12 @@ const ToothIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 
 const specialties = [
-  { name: 'General Physician', icon: Stethoscope, agentId: 'general' },
-  { name: 'Cardiologist', icon: HeartPulse, agentId: 'cardio' },
-  { name: 'Dentist', icon: ToothIcon, agentId: 'dental' },
-  { name: 'Pediatrician', icon: Baby, agentId: 'peds' },
-  { name: 'Neurologist', icon: Brain, agentId: 'neuro' },
-  { name: 'Orthopedic', icon: Bone, agentId: 'ortho' },
+  { name: 'General Physician', icon: Stethoscope, agentId: 'General Physician' },
+  { name: 'Cardiologist', icon: HeartPulse, agentId: 'Cardiologist' },
+  { name: 'Dentist', icon: ToothIcon, agentId: 'Dentist' },
+  { name: 'Pediatrician', icon: Baby, agentId: 'Pediatrician' },
+  { name: 'Neurologist', icon: Brain, agentId: 'Neurologist' },
+  { name: 'Orthopedic', icon: Bone, agentId: 'Orthopedic' },
 ];
 
 export function FeaturedSpecialties() {

@@ -29,10 +29,11 @@ import {
 
 export async function getAIResponse(
   userId: string | undefined,
-  query: string
+  query: string,
+  specialty?: string
 ): Promise<AIHealthQueryOutput> {
   try {
-    const response = await aiHealthQuery({ query });
+    const response = await aiHealthQuery({ query, specialty });
     // Logging will be handled on the client side in the chat container
     // to ensure user context is available and avoid server-side auth complexities.
     return response;

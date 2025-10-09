@@ -12,7 +12,11 @@ import { EmptyChat } from "./empty-chat";
 import { ChatMessageComponent, LoadingMessage } from "./chat-message";
 import { signInAnonymously } from "firebase/auth";
 
-export function ChatContainer() {
+interface ChatContainerProps {
+  agent?: string;
+}
+
+export function ChatContainer({ agent }: ChatContainerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -54,8 +58,8 @@ export function ChatContainer() {
     };
     setMessages(prev => [...prev, userMessage]);
 
-    // Now getAIResponse is called with the userId.
-    const aiResponse = await getAIResponse(user.uid, userQuery);
+    // Now getAIResponse is called with the userId and the agent specialty.
+    const aiResponse = await getAIResponse(user.uid, userQuery, agent);
 
     // Only log consultations for non-anonymous users
     if (!user.isAnonymous) {
