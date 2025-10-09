@@ -16,8 +16,13 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
     // Don't show nav/footer on these pages for an immersive experience
-    const immersivePages = ['/login', '/register', '/register/patient', '/book-service', '/tracking', '/symptom-checker', '/profile/edit'];
+    const immersivePages = ['/login', '/register', '/register/patient', '/book-service', '/tracking', '/profile/edit'];
     const isImmersive = immersivePages.some(p => pathname.startsWith(p));
+    
+    // Symptom checker is full-screen, but needs its own header.
+    if (pathname.startsWith('/symptom-checker')) {
+         return <main className="h-screen">{children}</main>;
+    }
     
     if (isImmersive) {
         return <main className="h-screen">{children}</main>;
@@ -29,7 +34,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             <main className="flex-1">
                 {children}
             </main>
-            <div className="md:pb-0">
+            {/* The pb-16 is padding for the bottom nav on mobile */}
+            <div className="pb-16 md:pb-0">
                  {/* Only show the footer on the homepage */}
                 {pathname === '/' && <AppFooter />}
                 

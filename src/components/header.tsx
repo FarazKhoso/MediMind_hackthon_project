@@ -9,8 +9,6 @@ import {
   Settings,
   Languages,
   Check,
-  Sun,
-  Moon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +23,7 @@ import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { ModeToggle } from './theme-toggle';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
 import { Logo } from './logo';
 import { useAppMode } from '@/hooks/use-app-mode';
@@ -33,6 +31,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { ProfileSidebar } from './profile-sidebar';
+import { ModeSwitcher } from './mode-switcher';
 
 const PatientNavLinks = ({
   isMobile = false,
@@ -126,6 +125,7 @@ export function AppHeader() {
   const { user, userProfile } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { language, setLanguage } = useLanguage();
   const { isProviderRole, mode } = useAppMode();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -143,6 +143,12 @@ export function AppHeader() {
   const handleMobileLinkClick = () => {
     setMobileMenuOpen(false);
   };
+  
+  // Hide header on certain pages for a more immersive experience
+  const immersivePages = ['/login', '/register', '/register/patient'];
+  if (immersivePages.some(p => pathname.startsWith(p))) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-sm">
@@ -170,8 +176,9 @@ export function AppHeader() {
 
               {/* Mobile Actions in Footer of Drawer */}
               <div className="p-4 border-t mt-auto">
+                <ModeSwitcher />
                 {user && !user.isAnonymous ? (
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 mt-4">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={userProfile?.avatarUrl} />
                       <AvatarFallback>
@@ -191,7 +198,7 @@ export function AppHeader() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 mt-4">
                     <Button
                       variant="outline"
                       onClick={() => {
@@ -203,7 +210,8 @@ export function AppHeader() {
                     </Button>
                     <Button
                       onClick={() => {
-                        router.push('/register/patient');
+                        const registerPath = mode === 'provider' ? '/register' : '/register/patient';
+                        router.push(registerPath);
                         handleMobileLinkClick();
                       }}
                     >
@@ -324,7 +332,10 @@ export function AppHeader() {
                 <Button variant="ghost" onClick={() => router.push('/login')}>
                   Sign In
                 </Button>
-                <Button onClick={() => router.push('/register/patient')}>
+                <Button onClick={() => {
+                    const registerPath = mode === 'provider' ? '/register' : '/register/patient';
+                    router.push(registerPath);
+                }}>
                   Sign Up
                 </Button>
               </div>

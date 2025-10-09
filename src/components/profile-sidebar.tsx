@@ -11,8 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
-import { LogOut, User, Settings, Shield, FileText, LifeBuoy, Bell } from 'lucide-react';
+import { LogOut, User, Settings, Shield, FileText, LifeBuoy, Bell, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
+import { useAppMode } from '@/hooks/use-app-mode';
+import { ModeSwitcher } from './mode-switcher';
 
 interface ProfileSidebarProps {
   open: boolean;
@@ -30,6 +32,8 @@ export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
   const { user, userProfile } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const { isProviderRole } = useAppMode();
+
 
   const handleLogout = async () => {
     if (auth) {
@@ -42,6 +46,8 @@ export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
   if (!user || user.isAnonymous) {
     return null;
   }
+
+  const bookingLink = isProviderRole ? "/provider-bookings" : "/my-bookings";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -62,8 +68,9 @@ export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
         </SheetHeader>
         <div className="flex-1 p-6 overflow-y-auto">
             <nav className="flex flex-col gap-2">
+                {isProviderRole && <SidebarLink href="/dashboard" icon={LayoutDashboard} onClick={() => onOpenChange(false)}>Dashboard</SidebarLink>}
                 <SidebarLink href="/profile/edit" icon={User} onClick={() => onOpenChange(false)}>Edit Profile</SidebarLink>
-                <SidebarLink href="/my-bookings" icon={FileText} onClick={() => onOpenChange(false)}>My Bookings</SidebarLink>
+                <SidebarLink href={bookingLink} icon={FileText} onClick={() => onOpenChange(false)}>My Bookings</SidebarLink>
                 <SidebarLink href="/notifications" icon={Bell} onClick={() => onOpenChange(false)}>Notifications</SidebarLink>
                 <SidebarLink href="/settings" icon={Settings} onClick={() => onOpenChange(false)}>Settings</SidebarLink>
                 <SidebarLink href="/help" icon={LifeBuoy} onClick={() => onOpenChange(false)}>Help & Support</SidebarLink>
@@ -71,7 +78,8 @@ export function ProfileSidebar({ open, onOpenChange }: ProfileSidebarProps) {
             </nav>
         </div>
         <div className="p-6 border-t mt-auto">
-            <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" onClick={handleLogout}>
+            <ModeSwitcher />
+            <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50 mt-2" onClick={handleLogout}>
                 <LogOut className="mr-3 w-5 h-5"/>
                 Logout
             </Button>

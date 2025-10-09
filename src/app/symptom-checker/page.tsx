@@ -16,7 +16,7 @@ export default function SymptomCheckerPage() {
         <h1 className="text-xl font-headline font-bold">
           {agent ? `${agent} AI Agent` : 'AI Symptom Checker'}
         </h1>
-      </header>
+       </header>
       <main className="flex-1 overflow-hidden">
         <ChatContainer agent={agent} />
       </main>

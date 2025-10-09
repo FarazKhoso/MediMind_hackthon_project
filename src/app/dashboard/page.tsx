@@ -14,8 +14,6 @@ import { useCollection } from '@/firebase/firestore/use-collection';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppMode } from '@/hooks/use-app-mode';
 import { useToast } from '@/hooks/use-toast';
-import { FirestorePermissionError } from '@/firebase/errors';
-import { errorEmitter } from '@/firebase/error-emitter';
 import { AppHeader } from '@/components/header';
 
 
@@ -104,7 +102,6 @@ export default function ProviderDashboard() {
         <div className="flex flex-col h-full">
             <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
                 <h1 className="text-xl font-headline font-bold">Provider Dashboard</h1>
-                <AppHeader />
             </header>
             <main className="flex-1 flex items-center justify-center p-4">
                 <Alert variant="destructive" className="max-w-md">
@@ -125,7 +122,6 @@ export default function ProviderDashboard() {
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10 md:hidden">
         <h1 className="text-xl font-headline font-bold">New Booking Requests</h1>
-        <AppHeader />
       </header>
       <main className="flex-1 overflow-y-auto bg-muted/50 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">
@@ -157,7 +153,7 @@ export default function ProviderDashboard() {
                         </Avatar>
                         <div className="flex-grow">
                              <div className="flex justify-between items-center">
-                                <h3 className="font-headline font-semibold">{booking.serviceType.charAt(0).toUpperCase() + booking.serviceType.slice(1)} Request</h3>
+                                <h3 className="font-headline font-semibold capitalize">{booking.serviceType} Request</h3>
                                 <p className="text-xl font-bold text-primary">PKR {booking.bidPrice}</p>
                              </div>
                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -182,7 +178,7 @@ export default function ProviderDashboard() {
                                 disabled={updatingId === booking.id}
                                 className="bg-green-500 hover:bg-green-600"
                             >
-                                {updatingId === booking.id && updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
+                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Accept"}
                             </Button>
                             <Button variant="outline" onClick={() => handleNavigateToChat(booking.id)}>Negotiate</Button>
                             <Button 
@@ -191,7 +187,7 @@ export default function ProviderDashboard() {
                               onClick={() => handleDecline(booking.id)}
                               disabled={updatingId === booking.id}
                             >
-                                {updatingId === booking.id && updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
+                                {updatingId === booking.id ? <Loader2 className="animate-spin"/> : "Decline"}
                             </Button>
                         </div>
                     </div>

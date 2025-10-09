@@ -11,7 +11,7 @@ import { ProfileSidebar } from './profile-sidebar';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/book-service', label: 'Book', icon: HandPlatter },
+  { href: '/symptom-checker', label: 'AI Chat', icon: HandPlatter },
   { href: '/my-bookings', label: 'Bookings', icon: BookMarked },
 ];
 
