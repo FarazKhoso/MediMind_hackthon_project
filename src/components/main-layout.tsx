@@ -16,7 +16,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     const showProviderMenu = user ? isProviderRole : mode === 'provider';
 
     // Don't show nav/footer on these pages for an immersive experience
-    const immersivePages = ['/login', '/register', '/register/patient', '/book-service', '/tracking', '/symptom-checker'];
+    const immersivePages = ['/login', '/register', '/register/patient', '/book-service', '/tracking', '/symptom-checker', '/profile/edit'];
     const isImmersive = immersivePages.some(p => pathname.startsWith(p));
     
     if (isImmersive) {
