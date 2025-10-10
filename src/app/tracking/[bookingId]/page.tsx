@@ -190,7 +190,7 @@ export default function TrackingPage() {
             toast({ title: 'Rating Submitted!', description: 'Thank you for your feedback.' });
         } catch (error) {
             console.error("Failed to submit rating:", error);
-            toast({ variant: 'destructive', title: 'Rating Failed', description: 'Could not submit your rating. Please try again.' });
+            toast({ variant: 'destructive', title: 'Rating Failed', description: String(error) || 'Could not submit your rating. Please try again.' });
         } finally {
             setRatingLoading(false);
         }
