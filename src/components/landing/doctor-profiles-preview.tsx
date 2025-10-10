@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import { Star, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,9 +58,9 @@ export function DoctorProfilesPreview() {
                 <div className="mt-3 flex items-center justify-center gap-4">
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" />
-                    <span className="font-bold">{doctor.rating}</span>
+                    <span className="font-bold">{doctor.rating.toFixed(1)}</span>
                     <span className="text-foreground/60">
-                      ({doctor.reviews})
+                      ({doctor.reviews} reviews)
                     </span>
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">

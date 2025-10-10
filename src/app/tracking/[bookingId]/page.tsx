@@ -3,7 +3,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useFirestore, useDoc, useMemoFirebase, useUser } from '@/firebase';
-import { doc, updateDoc, collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { doc, updateDoc, collection, addDoc, serverTimestamp, query, orderBy, runTransaction, DocumentReference } from 'firebase/firestore';
 import { Loader2, MapPin, User, Clock, CheckCircle, ShieldCheck, MessageSquare, SendHorizonal, Star, XCircle, Hourglass, Car, CircleDotDashed } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -89,6 +89,9 @@ export default function TrackingPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [newMessage, setNewMessage] = useState('');
+    const [rating, setRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [ratingLoading, setRatingLoading] = useState(false);
 
     const bookingRef = useMemoFirebase(() => {
         if (!firestore || !bookingId) return null;
@@ -154,10 +157,51 @@ export default function TrackingPage() {
         }
     };
 
+    const handleRatingSubmit = async () => {
+        if (rating === 0 || !firestore || !booking || !bookingRef || !booking.providerId) {
+            toast({ variant: 'destructive', title: 'Invalid Rating', description: 'Please select a rating before submitting.' });
+            return;
+        }
+        setRatingLoading(true);
+        const providerRef = doc(firestore, 'providers', booking.providerId);
+        
+        try {
+            await runTransaction(firestore, async (transaction) => {
+                const providerDoc = await transaction.get(providerRef);
+                if (!providerDoc.exists()) {
+                    throw "Provider profile not found!";
+                }
+
+                const providerData = providerDoc.data();
+                const currentRating = providerData.rating || 0;
+                const reviewCount = providerData.reviewCount || 0;
+
+                const newReviewCount = reviewCount + 1;
+                const newRating = ((currentRating * reviewCount) + rating) / newReviewCount;
+                
+                transaction.update(providerRef, { 
+                    rating: newRating,
+                    reviewCount: newReviewCount 
+                });
+                
+                transaction.update(bookingRef, { rating: rating });
+            });
+            
+            toast({ title: 'Rating Submitted!', description: 'Thank you for your feedback.' });
+        } catch (error) {
+            console.error("Failed to submit rating:", error);
+            toast({ variant: 'destructive', title: 'Rating Failed', description: 'Could not submit your rating. Please try again.' });
+        } finally {
+            setRatingLoading(false);
+        }
+    };
+
 
     if (bookingLoading) {
         return <div className="flex h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>;
     }
+
+
 
     if (!booking) {
         return (
@@ -229,22 +273,49 @@ export default function TrackingPage() {
     }
     
     const renderRating = () => {
-        if (isCustomer && booking.status === 'completed') {
+        if (isCustomer && booking.status === 'completed' && !booking.rating) {
             return (
                 <Card>
                     <CardHeader>
                         <CardTitle>Rate your Provider</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex items-center justify-center gap-2">
-                        {[1, 2, 3, 4, 5].map(rating => (
-                            <button key={rating} className="group">
-                                <Star className="h-8 w-8 text-gray-300 group-hover:text-yellow-400 transition-colors" />
-                            </button>
-                        ))}
+                    <CardContent className="flex flex-col items-center justify-center gap-4">
+                        <div className="flex gap-1" onMouseLeave={() => setHoverRating(0)}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                                <button 
+                                    key={star} 
+                                    className="group" 
+                                    onClick={() => setRating(star)}
+                                    onMouseEnter={() => setHoverRating(star)}
+                                >
+                                    <Star className={cn("h-8 w-8 text-gray-300 transition-colors", 
+                                        (hoverRating >= star || rating >= star) ? "text-yellow-400 fill-yellow-400" : ""
+                                    )} />
+                                </button>
+                            ))}
+                        </div>
+                        <Button onClick={handleRatingSubmit} disabled={ratingLoading} className="w-full">
+                            {ratingLoading ? <Loader2 className="animate-spin" /> : "Submit Rating"}
+                        </Button>
                     </CardContent>
                 </Card>
             );
         }
+        if(isCustomer && booking.status === 'completed' && booking.rating) {
+             return (
+                <Card>
+                     <CardHeader>
+                        <CardTitle>Your Rating</CardTitle>
+                    </CardHeader>
+                     <CardContent className="flex items-center justify-center gap-1">
+                        {[1, 2, 3, 4, 5].map(star => (
+                            <Star key={star} className={cn("h-8 w-8 text-yellow-400", booking.rating >= star ? "fill-yellow-400" : "fill-transparent" )} />
+                        ))}
+                    </CardContent>
+                </Card>
+             )
+        }
+
         return null;
     }
 

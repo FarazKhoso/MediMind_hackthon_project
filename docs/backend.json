@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -72,6 +73,10 @@
         "rating": {
           "type": "number",
           "description": "Average rating of the provider from 1 to 5."
+        },
+        "reviewCount": {
+          "type": "number",
+          "description": "Total number of reviews received."
         }
       },
       "required": [
@@ -146,6 +151,10 @@
         "completedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "rating": {
+          "type": "number",
+          "description": "The rating given by the customer for this specific booking (1-5)."
         }
       },
       "required": [
