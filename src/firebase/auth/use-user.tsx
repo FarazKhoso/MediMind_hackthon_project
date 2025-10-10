@@ -48,8 +48,9 @@ export function useUser(): UseUserResult {
         if (doc.exists()) {
           setUserProfile(doc.data() as UserProfile);
         } else {
-          // If the user document doesn't exist, they are a customer by default
-          setUserProfile({ role: 'customer' });
+          // If the document doesn't exist, don't assume a role.
+          // The registration process is responsible for creating this doc.
+          setUserProfile(null);
         }
         setIsUserProfileLoading(false);
       }, (error) => {

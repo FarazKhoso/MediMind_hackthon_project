@@ -158,12 +158,13 @@ export default function TrackingPage() {
     };
 
     const handleRatingSubmit = async () => {
-        if (rating === 0 || !firestore || !booking || !bookingRef || !booking.providerId) {
+        if (rating === 0 || !firestore || !booking || !booking.providerId) {
             toast({ variant: 'destructive', title: 'Invalid Rating', description: 'Please select a rating before submitting.' });
             return;
         }
         setRatingLoading(true);
         const providerRef = doc(firestore, 'providers', booking.providerId);
+        const bookingDocRef = doc(firestore, 'bookings', booking.id);
         
         try {
             await runTransaction(firestore, async (transaction) => {
@@ -184,7 +185,7 @@ export default function TrackingPage() {
                     reviewCount: newReviewCount 
                 });
                 
-                transaction.update(bookingRef, { rating: rating });
+                transaction.update(bookingDocRef, { rating: rating });
             });
             
             toast({ title: 'Rating Submitted!', description: 'Thank you for your feedback.' });

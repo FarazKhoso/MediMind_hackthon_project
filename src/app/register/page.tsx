@@ -96,7 +96,7 @@ export default function RegisterPage() {
         isVerified: false, // Admin will verify this later
         availabilityStatus: 'offline',
         rating: 0,
-        reviewCount: 0, // Initialize reviewCount
+        reviewCount: 0, 
       });
 
       toast({
