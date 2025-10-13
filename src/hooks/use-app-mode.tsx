@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect, Suspense } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import { useUser } from '@/firebase';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
@@ -14,18 +15,22 @@ interface AppModeContextType {
 
 const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
-function AppModeInnerProvider({ children }: { children: ReactNode }) {
+export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   const { userProfile, isUserLoading, user } = useUser();
-  const [mode, setModeState] = useState<AppMode>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('appMode') as AppMode) || 'patient';
-    }
-    return 'patient';
-  });
-
+  // Start with a default mode, and update from localStorage on the client.
+  const [mode, setModeState] = useState<AppMode>('patient');
+  
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // This effect runs only on the client, after hydration.
+  useEffect(() => {
+    const storedMode = localStorage.getItem('appMode') as AppMode;
+    if (storedMode && storedMode !== mode) {
+      setModeState(storedMode);
+    }
+  }, []); // Empty dependency array ensures this runs only once on mount.
 
   const isProviderRole = userProfile?.role === 'provider';
 
@@ -51,11 +56,9 @@ function AppModeInnerProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('appMode', newMode);
     }
-
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    const value = current.toString();
-    const query = value ? `?${value}` : '';
-    window.location.href = pathname + query;
+    
+    // Use router to refresh the page to reflect mode changes consistently
+    router.refresh();
   };
 
   const contextValue = useMemo(
@@ -68,15 +71,6 @@ function AppModeInnerProvider({ children }: { children: ReactNode }) {
   );
 
   return <AppModeContext.Provider value={contextValue}>{children}</AppModeContext.Provider>;
-}
-
-// ✅ FIX: Wrap the provider in Suspense to handle searchParams safely
-export const AppModeProvider = ({ children }: { children: ReactNode }) => {
-  return (
-    <Suspense fallback={null}>
-      <AppModeInnerProvider>{children}</AppModeInnerProvider>
-    </Suspense>
-  );
 };
 
 export const useAppMode = () => {
