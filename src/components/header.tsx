@@ -43,17 +43,6 @@ const PatientNavLinks = ({
 }) => (
   <>
     <Link
-      href="/symptom-checker"
-      className={cn(
-        !isMobile &&
-          'text-sm font-medium text-muted-foreground transition-colors hover:text-primary',
-        isMobile && 'block p-4 border-b'
-      )}
-      onClick={onLinkClick}
-    >
-      AI Symptom Checker
-    </Link>
-    <Link
       href="/book-service"
       className={cn(
         !isMobile &&
