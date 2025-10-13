@@ -138,7 +138,7 @@ export function AppHeader() {
     if (auth) {
       await signOut(auth);
     }
-    router.push('/');
+    router.push('/login');
   };
 
   const handleMobileLinkClick = () => {
@@ -146,7 +146,7 @@ export function AppHeader() {
   };
   
   // Hide header on certain pages for a more immersive experience
-  const immersivePages = ['/login', '/register', '/register/patient'];
+  const immersivePages = ['/login', '/register'];
   if (immersivePages.some(p => pathname.startsWith(p))) {
     return null;
   }
@@ -177,7 +177,7 @@ export function AppHeader() {
 
               {/* Mobile Actions in Footer of Drawer */}
               <div className="p-4 border-t mt-auto">
-                <ModeSwitcher />
+                
                 {user && !user.isAnonymous ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 mt-4">
@@ -196,18 +196,18 @@ export function AppHeader() {
                         </p>
                         </div>
                     </div>
-                     {isProviderRole && (
-                      <Button variant="outline" className="w-full justify-start" onClick={() => {router.push('/profile/edit'); handleMobileLinkClick(); }}>
+                     <Button variant="outline" className="w-full justify-start" onClick={() => {router.push('/profile/edit'); handleMobileLinkClick(); }}>
                         <Edit className="mr-2 h-4 w-4"/>
                         Edit Profile
                       </Button>
-                    )}
                     <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600" onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4"/>
                       Logout
                     </Button>
                   </div>
                 ) : (
+                  <>
+                  <ModeSwitcher />
                   <div className="grid grid-cols-2 gap-2 mt-4">
                     <Button
                       variant="outline"
@@ -220,14 +220,14 @@ export function AppHeader() {
                     </Button>
                     <Button
                       onClick={() => {
-                        const registerPath = mode === 'provider' ? '/register' : '/register/patient';
-                        router.push(registerPath);
+                        router.push('/login');
                         handleMobileLinkClick();
                       }}
                     >
                       Sign Up
                     </Button>
                   </div>
+                  </>
                 )}
                 <div className="flex justify-between items-center mt-4">
                   <p className="text-sm text-muted-foreground">Settings</p>
@@ -342,10 +342,7 @@ export function AppHeader() {
                 <Button variant="ghost" onClick={() => router.push('/login')}>
                   Sign In
                 </Button>
-                <Button onClick={() => {
-                    const registerPath = mode === 'provider' ? '/register' : '/register/patient';
-                    router.push(registerPath);
-                }}>
+                <Button onClick={() => router.push('/login')}>
                   Sign Up
                 </Button>
               </div>
