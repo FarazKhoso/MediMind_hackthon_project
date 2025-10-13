@@ -14,9 +14,10 @@ import { signInAnonymously } from "firebase/auth";
 
 interface ChatContainerProps {
   agent?: string;
+  onNewMessage?: (message: ChatMessage) => void;
 }
 
-export function ChatContainer({ agent }: ChatContainerProps) {
+export function ChatContainer({ agent, onNewMessage }: ChatContainerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -33,11 +34,14 @@ export function ChatContainer({ agent }: ChatContainerProps) {
     }
   }, [user, isUserLoading, auth]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+  const handleNewMessage = (message: ChatMessage) => {
+    setMessages(prev => [...prev, message]);
+    if(onNewMessage) {
+        onNewMessage(message);
+    }
   }
 
-  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, query?: string) => {
+  const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, query?: string, specialty?: string) => {
     e?.preventDefault();
     const userQuery = query || input;
     if (!userQuery.trim()) return;
@@ -56,12 +60,10 @@ export function ChatContainer({ agent }: ChatContainerProps) {
       role: 'user',
       content: userQuery,
     };
-    setMessages(prev => [...prev, userMessage]);
+    handleNewMessage(userMessage);
 
-    // Now getAIResponse is called with the userId and the agent specialty.
-    const aiResponse = await getAIResponse(user.uid, userQuery, agent);
+    const aiResponse = await getAIResponse(user.uid, userQuery, specialty || agent);
 
-    // Only log consultations for non-anonymous users
     if (!user.isAnonymous) {
       logConsultation(firestore, {
         userId: user.uid,
@@ -77,7 +79,7 @@ export function ChatContainer({ agent }: ChatContainerProps) {
       role: 'assistant',
       content: aiResponse,
     };
-    setMessages(prev => [...prev, aiMessage]);
+    handleNewMessage(aiMessage);
     setIsLoading(false);
   }
   
@@ -104,7 +106,7 @@ export function ChatContainer({ agent }: ChatContainerProps) {
                 const userQuery = message.role === 'assistant' && index > 0 && messages[index - 1].role === 'user' 
                     ? messages[index - 1].content as string 
                     : '';
-                return <ChatMessageComponent key={message.id} message={message} userQuery={userQuery} />;
+                return <ChatMessageComponent key={message.id} message={message} userQuery={userQuery} onGetSpecialistResponse={handleSubmit} />;
                 })
             )}
             {isLoading && <LoadingMessage />}
@@ -115,7 +117,7 @@ export function ChatContainer({ agent }: ChatContainerProps) {
         <form onSubmit={handleSubmit} className="flex items-center gap-3 max-w-4xl mx-auto">
           <Textarea
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about symptoms, treatments, or health questions..."
             className="flex-1 resize-none shadow-sm"
             rows={1}

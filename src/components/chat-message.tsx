@@ -5,13 +5,11 @@ import type { AIHealthQueryOutput } from '@/ai/flows/ai-health-query';
 import type { ChatMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { AlertTriangle, Bot, BrainCircuit, HeartPulse, Lightbulb, User, ArrowRight, Stethoscope, Info } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from './ui/button';
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { requestDoctorHandoff } from '@/app/actions';
 import { Skeleton } from './ui/skeleton';
 
 function AssistantAvatar() {
@@ -61,30 +59,24 @@ function AICard({ title, icon: Icon, children }: { title: string; icon: React.El
   )
 }
 
-function AIMessage({ content, userQuery }: { content: AIHealthQueryOutput, userQuery: string }) {
-  const [handoffLoading, setHandoffLoading] = useState(false);
-  const { toast } = useToast();
+function AIMessage({ content, userQuery, onGetSpecialistResponse }: { content: AIHealthQueryOutput, userQuery: string, onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void }) {
+  const [isAskingSpecialist, setIsAskingSpecialist] = useState(false);
 
-  const handleHandoff = async () => {
-    setHandoffLoading(true);
-    const diagnosisSummary = `Insights: ${content.insights}. Risks: ${content.riskFactors}.`;
-    const result = await requestDoctorHandoff(userQuery, diagnosisSummary, content.confidenceScore);
-    
-    toast({
-      title: result.handoffInitiated ? "Handoff Requested" : "Handoff Failed",
-      description: result.message,
-      variant: result.handoffInitiated ? "default" : "destructive",
-    });
-    setHandoffLoading(false);
+  const handleAskSpecialist = async (e: React.FormEvent) => {
+    setIsAskingSpecialist(true);
+    // The parent component (ChatContainer) will handle the re-query.
+    // We pass the original query and the instruction to find a specialist.
+    onGetSpecialistResponse(e, userQuery, 'auto');
+    // We don't set loading to false, as the parent will show a global loading indicator
   }
 
   const confidencePercent = (content.confidenceScore * 100).toFixed(0);
 
   // If the query is not medical, show a simple decline message.
-  if (!content.isMedicalQuery) {
+  if (!content.isMedicalQuery || content.insights === "N/A") {
     return (
         <AICard title="Response" icon={Info}>
-            <p>{content.declineMessage || "I can only answer health-related questions."}</p>
+            <p>{content.declineMessage || "I am a medical AI assistant and can only answer health-related questions."}</p>
         </AICard>
     );
   }
@@ -93,9 +85,9 @@ function AIMessage({ content, userQuery }: { content: AIHealthQueryOutput, userQ
   return (
     <div className="space-y-4">
       <div className="grid gap-4">
-        {content.insights && content.insights !== "N/A" && <AICard title="Insights" icon={Lightbulb}>{content.insights}</AICard>}
-        {content.riskFactors && content.riskFactors !== "N/A" && <AICard title="Potential Risk Factors" icon={AlertTriangle}>{content.riskFactors}</AICard>}
-        {content.nextSteps && content.nextSteps !== "N/A" && <AICard title="Possible Next Steps" icon={ArrowRight}>{content.nextSteps}</AICard>}
+        {content.insights && <AICard title="Insights" icon={Lightbulb}>{content.insights}</AICard>}
+        {content.riskFactors && <AICard title="Potential Risk Factors" icon={AlertTriangle}>{content.riskFactors}</AICard>}
+        {content.nextSteps && <AICard title="Possible Next Steps" icon={ArrowRight}>{content.nextSteps}</AICard>}
       </div>
       
       <Alert>
@@ -114,9 +106,9 @@ function AIMessage({ content, userQuery }: { content: AIHealthQueryOutput, userQ
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="mb-4 text-sm text-foreground/80">The AI suggests that a consultation with a medical professional is advisable for your query.</p>
-                <Button onClick={handleHandoff} disabled={handoffLoading}>
-                    {handoffLoading ? "Requesting..." : "Contact a Doctor"}
+                <p className="mb-4 text-sm text-foreground/80">The AI suggests that a consultation with a specialist is advisable for your query.</p>
+                <Button onClick={handleAskSpecialist} disabled={isAskingSpecialist}>
+                    {isAskingSpecialist ? "Consulting Specialist..." : "Ask a Specialist AI"}
                 </Button>
             </CardContent>
         </Card>
@@ -125,12 +117,12 @@ function AIMessage({ content, userQuery }: { content: AIHealthQueryOutput, userQ
   );
 }
 
-export function ChatMessageComponent({ message, userQuery }: { message: ChatMessage; userQuery: string; }) {
+export function ChatMessageComponent({ message, userQuery, onGetSpecialistResponse }: { message: ChatMessage; userQuery: string; onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void; }) {
   if (message.role === 'user') {
     return (
       <div className="flex items-start gap-4 justify-end">
         <div className="bg-primary text-primary-foreground rounded-xl rounded-br-sm p-3 max-w-xl shadow">
-          <p>{message.content as string}</p>
+          <p className="whitespace-pre-wrap">{message.content as string}</p>
         </div>
         <UserAvatar />
       </div>
@@ -142,7 +134,7 @@ export function ChatMessageComponent({ message, userQuery }: { message: ChatMess
        <div className="flex items-start gap-4 animate-in fade-in duration-500">
          <AssistantAvatar />
          <div className="bg-card rounded-xl rounded-bl-sm p-4 max-w-2xl w-full shadow">
-            <AIMessage content={message.content} userQuery={userQuery} />
+            <AIMessage content={message.content} userQuery={userQuery} onGetSpecialistResponse={onGetSpecialistResponse} />
          </div>
        </div>
      );

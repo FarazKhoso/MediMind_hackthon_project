@@ -6,10 +6,6 @@ import {
   type AIHealthQueryOutput,
 } from '@/ai/flows/ai-health-query';
 import {
-  initiateDoctorHandoff,
-  type InitiateDoctorHandoffOutput,
-} from '@/ai/flows/doctor-handoff-initiation';
-import {
   healthDataAnalysis
 } from '@/ai/flows/health-data-analysis';
 import {
@@ -48,35 +44,6 @@ export async function getAIResponse(
       handoffRequired: false,
       isMedicalQuery: false,
       declineMessage: 'An error occurred while processing your request. Please try again later.'
-    };
-  }
-}
-
-export async function requestDoctorHandoff(
-  patientQuery: string,
-  aiDiagnosis: string,
-  confidenceScore: number
-): Promise<InitiateDoctorHandoffOutput> {
-  try {
-    const response = await initiateDoctorHandoff({
-      patientQuery,
-      aiDiagnosis,
-      confidenceScore,
-    });
-
-    // Optionally update the consultation log with the handoff result
-    if (response.handoffInitiated) {
-      // You might want a way to identify the original consultation to update it.
-      // For now, we'll log a new event or assume the latest log is the one to update.
-    }
-
-    return response;
-  } catch (error) {
-    console.error('Error initiating doctor handoff:', error);
-    return {
-      handoffInitiated: false,
-      message:
-        'An error occurred while trying to contact a doctor. Please try again.',
     };
   }
 }
