@@ -3,6 +3,7 @@
 
 import {
   aiHealthQuery,
+  type AIHealthQueryInput,
   type AIHealthQueryOutput,
 } from '@/ai/flows/ai-health-query';
 import {
@@ -25,11 +26,10 @@ import {
 
 export async function getAIResponse(
   userId: string | undefined,
-  query: string,
-  specialty?: string
+  input: AIHealthQueryInput,
 ): Promise<AIHealthQueryOutput> {
   try {
-    const response = await aiHealthQuery({ query, specialty });
+    const response = await aiHealthQuery(input);
     // Logging will be handled on the client side in the chat container
     // to ensure user context is available and avoid server-side auth complexities.
     return response;

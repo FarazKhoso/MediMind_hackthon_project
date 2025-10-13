@@ -1,3 +1,4 @@
+
 'use client'
 
 import { getAIResponse } from "@/app/actions";
@@ -11,23 +12,30 @@ import { Textarea } from "./ui/textarea";
 import { EmptyChat } from "./empty-chat";
 import { ChatMessageComponent, LoadingMessage } from "./chat-message";
 import { signInAnonymously } from "firebase/auth";
+import type { AIHealthQueryOutput } from "@/ai/flows/ai-health-query";
 
 interface ChatContainerProps {
-  agent?: string;
+  initialAgent?: string;
   onNewMessage?: (message: ChatMessage) => void;
 }
 
-export function ChatContainer({ agent, onNewMessage }: ChatContainerProps) {
+export function ChatContainer({ initialAgent = 'General Physician', onNewMessage }: ChatContainerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [activeAgent, setActiveAgent] = useState(initialAgent);
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const auth = useAuth();
 
-  // Sign in user anonymously on component mount
+  useEffect(() => {
+    if (initialAgent !== activeAgent) {
+      setActiveAgent(initialAgent);
+    }
+  }, [initialAgent]);
+  
   useEffect(() => {
     if (!user && !isUserLoading && auth) {
       signInAnonymously(auth);
@@ -39,6 +47,9 @@ export function ChatContainer({ agent, onNewMessage }: ChatContainerProps) {
     if(onNewMessage) {
         onNewMessage(message);
     }
+    if (message.role === 'assistant' && typeof message.content === 'object' && message.content.specialty) {
+      setActiveAgent(message.content.specialty);
+    }
   }
 
   const handleSubmit = async (e?: React.FormEvent<HTMLFormElement>, query?: string, specialty?: string) => {
@@ -48,7 +59,6 @@ export function ChatContainer({ agent, onNewMessage }: ChatContainerProps) {
 
     if (!user || !firestore) {
         console.error("User not authenticated or Firestore not available, cannot proceed.");
-        // Optionally show a toast message to the user
         return;
     }
 
@@ -62,22 +72,28 @@ export function ChatContainer({ agent, onNewMessage }: ChatContainerProps) {
     };
     handleNewMessage(userMessage);
 
-    const aiResponse = await getAIResponse(user.uid, userQuery, specialty || agent);
+    const response = await getAIResponse(user.uid, { query: userQuery, specialty, activeAgent });
 
     if (!user.isAnonymous) {
       logConsultation(firestore, {
         userId: user.uid,
         userQuery: userQuery,
-        aiResponse: aiResponse.insights,
-        confidenceScore: aiResponse.confidenceScore,
-        handoffStatus: aiResponse.handoffRequired ? "pending" : "not_required",
+        aiResponse: response.insights,
+        confidenceScore: response.confidenceScore,
+        handoffStatus: response.handoffRequired ? "pending" : "not_required",
       });
     }
+
+    const newAgent = specialty === 'auto' ? response.specialty : specialty;
+    if (newAgent && newAgent !== activeAgent) {
+      setActiveAgent(newAgent);
+    }
+
 
     const aiMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
-      content: aiResponse,
+      content: response,
     };
     handleNewMessage(aiMessage);
     setIsLoading(false);
@@ -100,13 +116,13 @@ export function ChatContainer({ agent, onNewMessage }: ChatContainerProps) {
         <div className="absolute inset-0 overflow-y-auto" ref={scrollRef}>
             <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
             {messages.length === 0 && !isLoading ? (
-                <EmptyChat agent={agent} onQuery={handleExampleQuery} />
+                <EmptyChat agent={activeAgent} onQuery={handleExampleQuery} />
             ) : (
                 messages.map((message, index) => {
                 const userQuery = message.role === 'assistant' && index > 0 && messages[index - 1].role === 'user' 
                     ? messages[index - 1].content as string 
                     : '';
-                return <ChatMessageComponent key={message.id} message={message} userQuery={userQuery} onGetSpecialistResponse={handleSubmit} />;
+                return <ChatMessageComponent key={message.id} message={message} userQuery={userQuery} onGetSpecialistResponse={handleSubmit} activeAgent={activeAgent} />;
                 })
             )}
             {isLoading && <LoadingMessage />}

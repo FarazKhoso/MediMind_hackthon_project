@@ -59,20 +59,16 @@ function AICard({ title, icon: Icon, children }: { title: string; icon: React.El
   )
 }
 
-function AIMessage({ content, userQuery, onGetSpecialistResponse }: { content: AIHealthQueryOutput, userQuery: string, onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void }) {
+function AIMessage({ content, userQuery, onGetSpecialistResponse, activeAgent }: { content: AIHealthQueryOutput, userQuery: string, onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void, activeAgent?: string }) {
   const [isAskingSpecialist, setIsAskingSpecialist] = useState(false);
 
   const handleAskSpecialist = async (e: React.FormEvent) => {
     setIsAskingSpecialist(true);
-    // The parent component (ChatContainer) will handle the re-query.
-    // We pass the original query and the instruction to find a specialist.
     onGetSpecialistResponse(e, userQuery, 'auto');
-    // We don't set loading to false, as the parent will show a global loading indicator
   }
 
   const confidencePercent = (content.confidenceScore * 100).toFixed(0);
 
-  // If the query is not medical, show a simple decline message.
   if (!content.isMedicalQuery || content.insights === "N/A") {
     return (
         <AICard title="Response" icon={Info}>
@@ -81,6 +77,7 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse }: { content: A
     );
   }
   
+  const isSpecialistActive = activeAgent && activeAgent !== 'General Physician';
 
   return (
     <div className="space-y-4">
@@ -98,7 +95,7 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse }: { content: A
         </AlertDescription>
       </Alert>
       
-      {content.handoffRequired && (
+      {content.handoffRequired && !isSpecialistActive && (
         <Card className="bg-accent/50 border-primary">
             <CardHeader className="pb-4">
                 <CardTitle className="font-headline flex items-center gap-2">
@@ -117,7 +114,7 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse }: { content: A
   );
 }
 
-export function ChatMessageComponent({ message, userQuery, onGetSpecialistResponse }: { message: ChatMessage; userQuery: string; onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void; }) {
+export function ChatMessageComponent({ message, userQuery, onGetSpecialistResponse, activeAgent }: { message: ChatMessage; userQuery: string; onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void; activeAgent?: string; }) {
   if (message.role === 'user') {
     return (
       <div className="flex items-start gap-4 justify-end">
@@ -134,7 +131,7 @@ export function ChatMessageComponent({ message, userQuery, onGetSpecialistRespon
        <div className="flex items-start gap-4 animate-in fade-in duration-500">
          <AssistantAvatar />
          <div className="bg-card rounded-xl rounded-bl-sm p-4 max-w-2xl w-full shadow">
-            <AIMessage content={message.content} userQuery={userQuery} onGetSpecialistResponse={onGetSpecialistResponse} />
+            <AIMessage content={message.content} userQuery={userQuery} onGetSpecialistResponse={onGetSpecialistResponse} activeAgent={activeAgent} />
          </div>
        </div>
      );

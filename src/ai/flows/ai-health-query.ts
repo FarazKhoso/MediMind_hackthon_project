@@ -16,6 +16,7 @@ import {z} from 'genkit';
 const AIHealthQueryInputSchema = z.object({
   query: z.string().describe('The health-related query from the user.'),
   specialty: z.string().optional().describe('The specialty of the AI agent, e.g., "Cardiologist" or "auto" to determine the best specialty.'),
+  activeAgent: z.string().optional().describe('The specialty of the currently active agent, if any.'),
 });
 export type AIHealthQueryInput = z.infer<typeof AIHealthQueryInputSchema>;
 
@@ -62,10 +63,12 @@ const prompt = ai.definePrompt({
         *   Set 'insights', 'riskFactors', and 'nextSteps' to "N/A".
 
 5.  **Confidence & Handoff**:
-    *   For health-related queries, provide a confidence score (0-1) and determine if a handoff to a human doctor is required.
+    *   For health-related queries, provide a confidence score (0-1).
+    *   Determine if a handoff to a human doctor is required. **CRITICAL: If an 'activeAgent' is provided and it is NOT 'General Physician', it means the user is already talking to a specialist. In this case, you MUST set 'handoffRequired' to false, unless the query is clearly for a completely different specialty.**
     *   For non-health queries, set confidence to 0 and handoff to false.
 
 User Query: {{{query}}}
+Current Active Agent: {{{activeAgent}}}
 `,
   config: {
     safetySettings: [
