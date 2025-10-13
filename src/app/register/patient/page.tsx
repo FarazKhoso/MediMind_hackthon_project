@@ -58,6 +58,11 @@ export default function RegisterPatientPage() {
 
   const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
     setLoading(true);
+    if (!auth || !firestore) {
+      toast({ variant: 'destructive', title: 'Services not available' });
+      setLoading(false);
+      return;
+    }
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -144,7 +149,7 @@ export default function RegisterPatientPage() {
               />
               <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Patient Account
+                {loading ? 'Creating Account...' : 'Create Patient Account'}
               </Button>
             </form>
           </Form>

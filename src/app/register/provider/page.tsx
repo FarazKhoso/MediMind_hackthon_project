@@ -229,7 +229,7 @@ export default function RegisterProviderPage() {
 
               <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Register Account
+                {loading ? 'Creating Account...' : 'Register Account'}
               </Button>
             </form>
           </Form>

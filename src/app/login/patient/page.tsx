@@ -126,7 +126,7 @@ export default function LoginPatientPage() {
                 />
                 <Button type="submit" size="lg" className="w-full font-bold" disabled={loading}>
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Login
+                    {loading ? 'Logging in...' : 'Login'}
                 </Button>
                 </form>
             </Form>
