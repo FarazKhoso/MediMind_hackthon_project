@@ -1,9 +1,10 @@
+
 'use client'
 
 import type { AIHealthQueryOutput } from '@/ai/flows/ai-health-query';
 import type { ChatMessage } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, Bot, BrainCircuit, HeartPulse, Lightbulb, User, ArrowRight, Stethoscope } from 'lucide-react';
+import { AlertTriangle, Bot, BrainCircuit, HeartPulse, Lightbulb, User, ArrowRight, Stethoscope, Info } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -79,12 +80,22 @@ function AIMessage({ content, userQuery }: { content: AIHealthQueryOutput, userQ
 
   const confidencePercent = (content.confidenceScore * 100).toFixed(0);
 
+  // If the query is not medical, show a simple decline message.
+  if (!content.isMedicalQuery) {
+    return (
+        <AICard title="Response" icon={Info}>
+            <p>{content.declineMessage || "I can only answer health-related questions."}</p>
+        </AICard>
+    );
+  }
+  
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4">
-        {content.insights && <AICard title="Insights" icon={Lightbulb}>{content.insights}</AICard>}
-        {content.riskFactors && <AICard title="Potential Risk Factors" icon={AlertTriangle}>{content.riskFactors}</AICard>}
-        {content.nextSteps && <AICard title="Possible Next Steps" icon={ArrowRight}>{content.nextSteps}</AICard>}
+        {content.insights && content.insights !== "N/A" && <AICard title="Insights" icon={Lightbulb}>{content.insights}</AICard>}
+        {content.riskFactors && content.riskFactors !== "N/A" && <AICard title="Potential Risk Factors" icon={AlertTriangle}>{content.riskFactors}</AICard>}
+        {content.nextSteps && content.nextSteps !== "N/A" && <AICard title="Possible Next Steps" icon={ArrowRight}>{content.nextSteps}</AICard>}
       </div>
       
       <Alert>

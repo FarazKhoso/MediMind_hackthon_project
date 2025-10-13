@@ -46,6 +46,8 @@ export async function getAIResponse(
       nextSteps: 'If the problem persists, contact support.',
       confidenceScore: 0,
       handoffRequired: false,
+      isMedicalQuery: false,
+      declineMessage: 'An error occurred while processing your request. Please try again later.'
     };
   }
 }
