@@ -21,6 +21,7 @@ export default function ProviderBookingsPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
+    // Query is now simpler: just get all bookings for the provider, ordered by creation date.
     return query(
       collection(firestore, 'bookings'),
       where('providerId', '==', user.uid),
@@ -60,8 +61,9 @@ export default function ProviderBookingsPage() {
      )
   }
 
-  const showNoBookingsMessage = !bookingsLoading && bookings && bookings.length === 0;
-  const showError = error && !bookingsLoading && (!bookings || bookings.length === 0);
+  // ✅ Updated logic: Differentiate between loading, error, and a genuine empty state.
+  const showNoBookingsMessage = !bookingsLoading && bookings && bookings.length === 0 && !error;
+  const showError = !bookingsLoading && error;
 
   return (
     <div className="flex flex-col h-full">
@@ -81,7 +83,7 @@ export default function ProviderBookingsPage() {
             <div className="text-center py-16">
                 <HandPlatter className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="font-headline text-lg">No Assigned Bookings Yet</h3>
-              <p className="text-muted-foreground">You haven't accepted any bookings.</p>
+              <p className="text-muted-foreground">You haven't accepted any bookings. Once you do, they'll appear here.</p>
               <Button variant="link" onClick={() => router.push('/dashboard')}>
                 View New Requests
               </Button>

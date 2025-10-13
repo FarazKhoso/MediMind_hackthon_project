@@ -19,6 +19,7 @@ export default function MyBookingsPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
+    // Query is now simpler: just get all bookings for the customer, ordered by creation date.
     return query(
       collection(firestore, 'bookings'),
       where('customerId', '==', user.uid),
@@ -63,11 +64,11 @@ export default function MyBookingsPage() {
     );
   }
 
-  // ✅ Updated logic
+  // ✅ Updated logic: Differentiate between loading, error, and a genuine empty state.
   const showNoBookingsMessage =
-    !bookingsLoading && !error && bookings && bookings.length === 0;
+    !bookingsLoading && bookings && bookings.length === 0 && !error;
   const showError =
-    error && !bookingsLoading && bookings === undefined;
+    !bookingsLoading && error;
 
   return (
     <div className="flex flex-col h-full">
