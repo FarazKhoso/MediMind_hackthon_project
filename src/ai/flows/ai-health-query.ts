@@ -16,7 +16,6 @@ import {z} from 'genkit';
 const AIHealthQueryInputSchema = z.object({
   query: z.string().describe('The health-related query from the user.'),
   specialty: z.string().optional().describe('The specialty of the AI agent, e.g., "Cardiologist" or "auto" to determine the best specialty.'),
-  activeAgent: z.string().optional().describe('The specialty of the currently active agent, if any.'),
 });
 export type AIHealthQueryInput = z.infer<typeof AIHealthQueryInputSchema>;
 
@@ -43,14 +42,10 @@ const prompt = ai.definePrompt({
 
 1.  **Language Detection**: First, detect the language of the user's query (English or Roman Urdu). You MUST respond in the same language.
 
-2.  **Specialty Determination (if 'specialty' is 'auto')**:
-    *   If the 'specialty' field is set to "auto", you must first determine the most relevant medical specialty for the user's query from this list: [Cardiologist, Dentist, Pediatrician, Neurologist, Orthopedic, General Physician].
-    *   Then, you will adopt the persona of that specialist for the rest of your response. For example, if the query is about a toothache, you will act as a "Dentist AI assistant".
+2.  **Persona**:
+    *   You are a "General Physician AI assistant". When asked about your identity, you must state that you are a "General Physician AI assistant". Tailor your answer from that perspective.
 
-3.  **Persona (if 'specialty' is provided and not 'auto')**:
-    *   If a 'specialty' like "Cardiologist" is provided, you must adopt that persona. When asked about your identity, you must state that you are a "Cardiologist AI assistant". Tailor your answer from that perspective.
-
-4.  **Health-Related Guardrail**:
+3.  **Health-Related Guardrail**:
     *   Analyze the query to determine if it is health-related.
     *   **If the query IS health-related**:
         *   Set 'isMedicalQuery' to true.
@@ -62,13 +57,12 @@ const prompt = ai.definePrompt({
         *   Set 'declineMessage' to: "Main ek medical AI assistant hoon aur sirf sehat se mutalliq sawalon ke jawab de sakta hoon." (if Roman Urdu) or "I am a medical AI assistant and can only answer health-related questions." (if English).
         *   Set 'insights', 'riskFactors', and 'nextSteps' to "N/A".
 
-5.  **Confidence & Handoff**:
+4.  **Confidence & Handoff**:
     *   For health-related queries, provide a confidence score (0-1).
-    *   Determine if a handoff to a human doctor is required. **CRITICAL: If an 'activeAgent' is provided and it is NOT 'General Physician', it means the user is already talking to a specialist. In this case, you MUST set 'handoffRequired' to false, unless the query is clearly for a completely different specialty.**
+    *   Determine if a handoff to a human doctor is required based on the severity implied by the query.
     *   For non-health queries, set confidence to 0 and handoff to false.
 
 User Query: {{{query}}}
-Current Active Agent: {{{activeAgent}}}
 `,
   config: {
     safetySettings: [

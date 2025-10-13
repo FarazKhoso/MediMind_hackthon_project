@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 
 function AssistantAvatar() {
@@ -59,14 +59,8 @@ function AICard({ title, icon: Icon, children }: { title: string; icon: React.El
   )
 }
 
-function AIMessage({ content, userQuery, onGetSpecialistResponse, activeAgent }: { content: AIHealthQueryOutput, userQuery: string, onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void, activeAgent?: string }) {
-  const [isAskingSpecialist, setIsAskingSpecialist] = useState(false);
-
-  const handleAskSpecialist = async (e: React.FormEvent) => {
-    setIsAskingSpecialist(true);
-    onGetSpecialistResponse(e, userQuery, 'auto');
-  }
-
+function AIMessage({ content }: { content: AIHealthQueryOutput }) {
+  const router = useRouter();
   const confidencePercent = (content.confidenceScore * 100).toFixed(0);
 
   if (!content.isMedicalQuery || content.insights === "N/A") {
@@ -76,8 +70,6 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse, activeAgent }:
         </AICard>
     );
   }
-  
-  const isSpecialistActive = activeAgent && activeAgent !== 'General Physician';
 
   return (
     <div className="space-y-4">
@@ -95,7 +87,7 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse, activeAgent }:
         </AlertDescription>
       </Alert>
       
-      {content.handoffRequired && !isSpecialistActive && (
+      {content.handoffRequired && (
         <Card className="bg-accent/50 border-primary">
             <CardHeader className="pb-4">
                 <CardTitle className="font-headline flex items-center gap-2">
@@ -103,9 +95,9 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse, activeAgent }:
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="mb-4 text-sm text-foreground/80">The AI suggests that a consultation with a specialist is advisable for your query.</p>
-                <Button onClick={handleAskSpecialist} disabled={isAskingSpecialist}>
-                    {isAskingSpecialist ? "Consulting Specialist..." : "Ask a Specialist AI"}
+                <p className="mb-4 text-sm text-foreground/80">The AI suggests that a consultation with a medical professional is advisable for your query.</p>
+                <Button onClick={() => router.push('/book-service')}>
+                    Book an Appointment
                 </Button>
             </CardContent>
         </Card>
@@ -114,7 +106,7 @@ function AIMessage({ content, userQuery, onGetSpecialistResponse, activeAgent }:
   );
 }
 
-export function ChatMessageComponent({ message, userQuery, onGetSpecialistResponse, activeAgent }: { message: ChatMessage; userQuery: string; onGetSpecialistResponse: (e: React.FormEvent, query: string, specialty: string) => void; activeAgent?: string; }) {
+export function ChatMessageComponent({ message }: { message: ChatMessage }) {
   if (message.role === 'user') {
     return (
       <div className="flex items-start gap-4 justify-end">
@@ -131,7 +123,7 @@ export function ChatMessageComponent({ message, userQuery, onGetSpecialistRespon
        <div className="flex items-start gap-4 animate-in fade-in duration-500">
          <AssistantAvatar />
          <div className="bg-card rounded-xl rounded-bl-sm p-4 max-w-2xl w-full shadow">
-            <AIMessage content={message.content} userQuery={userQuery} onGetSpecialistResponse={onGetSpecialistResponse} activeAgent={activeAgent} />
+            <AIMessage content={message.content} />
          </div>
        </div>
      );
