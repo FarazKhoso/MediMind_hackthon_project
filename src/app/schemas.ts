@@ -15,6 +15,13 @@ export const HealthDataAnalysisOutputSchema = z.object({
 });
 export type HealthDataAnalysisOutput = z.infer<typeof HealthDataAnalysisOutputSchema>;
 
+const ScheduleItemSchema = z.object({
+    medicineOrVaccine: z.string(),
+    frequency: z.string().optional(),
+    date: z.string().optional(),
+    time: z.string().optional(),
+});
+
 export const MedicineReminderInputSchema = z.object({
   request: z.string().describe("User's request for a reminder. e.g., 'Set a reminder for Panadol every 6 hours' or 'Polio vaccine is due on 10/10/2025'"),
   reportImage: z.string().optional().describe("An optional image of a prescription or report, as a data URI."),
@@ -22,13 +29,8 @@ export const MedicineReminderInputSchema = z.object({
 export type MedicineReminderInput = z.infer<typeof MedicineReminderInputSchema>;
 
 export const MedicineReminderOutputSchema = z.object({
-  confirmation: z.string().describe('Confirmation message in Roman Urdu.'),
-  schedule: z.object({
-    medicineOrVaccine: z.string(),
-    frequency: z.string().optional(),
-    date: z.string().optional(),
-    time: z.string().optional(),
-  }).describe("The parsed schedule details."),
+  confirmation: z.string().describe('A single, general confirmation message in Roman Urdu.'),
+  schedule: z.array(ScheduleItemSchema).describe("An array of parsed schedule details. Must contain an object for each medicine found."),
 });
 export type MedicineReminderOutput = z.infer<typeof MedicineReminderOutputSchema>;
 

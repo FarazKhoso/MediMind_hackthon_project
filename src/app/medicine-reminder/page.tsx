@@ -126,23 +126,29 @@ export default function MedicineReminderPage() {
                 </div>
             )}
 
-            {result && (
+            {result && result.schedule.length > 0 && (
               <Card className="animate-in fade-in">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BellRing className="text-primary"/>
-                    Reminder Set Successfully
+                    Reminder(s) Set Successfully
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm">
                   <p className="text-lg text-foreground/90">{result.confirmation}</p>
-                  <div className="p-4 bg-muted/50 rounded-md">
-                      <h4 className="font-bold font-headline mb-2">Schedule Details:</h4>
-                      <p><strong>Medicine/Vaccine:</strong> {result.schedule.medicineOrVaccine}</p>
-                      {result.schedule.frequency && <p><strong>Frequency:</strong> {result.schedule.frequency}</p>}
-                      {result.schedule.date && <p><strong>Date:</strong> {result.schedule.date}</p>}
-                      {result.schedule.time && <p><strong>Time:</strong> {result.schedule.time}</p>}
+                  
+                  <div className="space-y-3">
+                    {result.schedule.map((item, index) => (
+                      <div key={index} className="p-4 bg-muted/50 rounded-md">
+                          <h4 className="font-bold font-headline mb-2">Reminder {index + 1}:</h4>
+                          <p><strong>Medicine/Vaccine:</strong> {item.medicineOrVaccine}</p>
+                          {item.frequency && <p><strong>Frequency:</strong> {item.frequency}</p>}
+                          {item.date && <p><strong>Date:</strong> {item.date}</p>}
+                          {item.time && <p><strong>Time:</strong> {item.time}</p>}
+                      </div>
+                    ))}
                   </div>
+
                    <Alert>
                     <AlertTitle className="font-headline">Note</AlertTitle>
                     <AlertDescription>
