@@ -7,6 +7,8 @@ import { Firestore, doc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { useDoc } from './firestore/use-doc';
+import { useUser as useUserFromAuth } from './auth/use-user';
+
 
 // Define the shape of the user profile data stored in Firestore
 interface UserProfile {
@@ -197,13 +199,3 @@ export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | 
   
   return memoized;
 }
-
-/**
- * Hook specifically for accessing the authenticated user's state.
- * This provides the User object, loading status, and any auth errors.
- * @returns {UserHookResult} Object with user, isUserLoading, userError.
- */
-export const useUser = (): UserHookResult => { 
-  const { user, isUserLoading, userError, userProfile, isUserProfileLoading } = useFirebase(); // Leverages the main hook
-  return { user, isUserLoading, userError, userProfile, isUserProfileLoading };
-};
