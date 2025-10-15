@@ -14,14 +14,8 @@ export function SymptomCheckerClient() {
   return (
     <div className="flex flex-col h-full">
        <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
-        <h1 className="text-xl font-headline font-bold">
-          {initialAgent} AI Agent
-        </h1>
-        {/* The full AppHeader was causing duplicate navigation. We only need the right-side controls. */}
-        {/* This can be refactored into a smaller component later if needed. */}
-        <div className="hidden md:flex">
-             <AppHeader />
-        </div>
+        {/* The AppHeader provides the logo and user controls. The specific agent title is handled inside the ChatContainer. */}
+        <AppHeader />
        </header>
       <main className="flex-1 overflow-hidden">
         <ChatContainer initialAgent={initialAgent} />
