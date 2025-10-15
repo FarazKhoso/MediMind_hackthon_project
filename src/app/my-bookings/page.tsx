@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useUser, useFirestore, useMemoFirebase } from '@/firebase';
@@ -19,7 +18,6 @@ export default function MyBookingsPage() {
 
   const bookingsQuery = useMemoFirebase(() => {
     if (!firestore || !user?.uid) return null;
-    // Query is now simpler: just get all bookings for the customer, ordered by creation date.
     return query(
       collection(firestore, 'bookings'),
       where('customerId', '==', user.uid),
@@ -64,12 +62,6 @@ export default function MyBookingsPage() {
     );
   }
 
-  // ✅ Updated logic: Differentiate between loading, error, and a genuine empty state.
-  const showNoBookingsMessage =
-    !bookingsLoading && bookings && bookings.length === 0 && !error;
-  const showError =
-    !bookingsLoading && error;
-
   return (
     <div className="flex flex-col h-full">
       <header className="flex items-center justify-between p-4 border-b bg-card shadow-sm z-10">
@@ -77,38 +69,32 @@ export default function MyBookingsPage() {
       </header>
       <main className="flex-1 overflow-y-auto bg-muted/50 p-4 md:p-8">
         <div className="max-w-2xl mx-auto space-y-4">
+
+          {/* 🌀 Loading State */}
           {bookingsLoading && (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="animate-spin h-6 w-6 text-primary" />
             </div>
           )}
 
-          {showNoBookingsMessage && (
+          {/* ✅ Empty bookings message */}
+          {!bookingsLoading && bookings && bookings.length === 0 && !error && (
             <div className="text-center py-16">
               <HandPlatter className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="font-headline text-lg">No Bookings Yet</h3>
-              <p className="text-muted-foreground">
-                You haven't made any bookings yet. When you do, they'll appear here.
+              <h3 className="font-headline text-lg font-semibold mb-2">No Bookings Yet</h3>
+              <p className="text-muted-foreground mb-4">
+                You haven’t made any bookings yet. Book your first service now!
               </p>
-              <Button variant="link" onClick={() => router.push('/book-service')}>
-                Book a Service Now
+              <Button
+                onClick={() => router.push('/book-service')}
+                className="mx-auto"
+              >
+                Book Your First Service
               </Button>
             </div>
           )}
 
-          {showError && (
-            <Card className="text-center">
-              <CardHeader>
-                <CardTitle className="text-destructive">Error Loading Bookings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Could not load your booking history. Please try again later.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
+          {/* ✅ Bookings List */}
           {!bookingsLoading &&
             bookings &&
             bookings.length > 0 &&

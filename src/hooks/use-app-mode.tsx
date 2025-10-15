@@ -1,9 +1,15 @@
-
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useMemo,
+  useEffect,
+} from 'react';
 import { useUser } from '@/firebase';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export type AppMode = 'patient' | 'provider';
 
@@ -17,35 +23,34 @@ const AppModeContext = createContext<AppModeContextType | undefined>(undefined);
 
 export const AppModeProvider = ({ children }: { children: ReactNode }) => {
   const { userProfile, isUserLoading, user } = useUser();
-  // Start with a default mode, and update from localStorage on the client.
   const [mode, setModeState] = useState<AppMode>('patient');
-  
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  // This effect runs only on the client, after hydration.
+  // ✅ Load mode from localStorage (only runs on client)
   useEffect(() => {
-    const storedMode = localStorage.getItem('appMode') as AppMode;
-    if (storedMode && storedMode !== mode) {
-      setModeState(storedMode);
+    if (typeof window !== 'undefined') {
+      const storedMode = localStorage.getItem('appMode') as AppMode | null;
+      if (storedMode && storedMode !== mode) {
+        setModeState(storedMode);
+      }
     }
-  }, []); // Empty dependency array ensures this runs only once on mount.
+  }, []);
 
+  // ✅ Automatically determine mode if user logged in
   const isProviderRole = userProfile?.role === 'provider';
-
   useEffect(() => {
     if (user && !user.isAnonymous && !isUserLoading && userProfile) {
-      const userMode = isProviderRole ? 'provider' : 'patient';
+      const userMode: AppMode = isProviderRole ? 'provider' : 'patient';
       if (mode !== userMode) {
         setModeState(userMode);
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('appMode');
+          localStorage.removeItem('appMode'); // clean old value
         }
       }
     }
   }, [user, isUserLoading, userProfile, isProviderRole, mode]);
 
+  // ✅ For logged-out users, allow switching manually
   const setMode = (newMode: AppMode) => {
     if (user && !user.isAnonymous) {
       console.warn('Cannot switch modes while logged in. Mode is determined by user role.');
@@ -56,8 +61,8 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('appMode', newMode);
     }
-    
-    // Use router to refresh the page to reflect mode changes consistently
+
+    // Refresh to apply changes globally
     router.refresh();
   };
 
@@ -67,15 +72,20 @@ export const AppModeProvider = ({ children }: { children: ReactNode }) => {
       setMode,
       isProviderRole,
     }),
-    [mode, user, isProviderRole]
+    [mode, isProviderRole]
   );
 
-  return <AppModeContext.Provider value={contextValue}>{children}</AppModeContext.Provider>;
+  return (
+    <AppModeContext.Provider value={contextValue}>
+      {children}
+    </AppModeContext.Provider>
+  );
 };
 
+// ✅ Hook to use mode anywhere
 export const useAppMode = () => {
   const context = useContext(AppModeContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAppMode must be used within an AppModeProvider');
   }
   return context;
