@@ -14,14 +14,15 @@ import { ChatMessageComponent, LoadingMessage } from "./chat-message";
 import { signInAnonymously } from "firebase/auth";
 
 interface ChatContainerProps {
-  onNewMessage?: (message: ChatMessage) => void;
+  initialAgent?: string;
 }
 
-export function ChatContainer({ onNewMessage }: ChatContainerProps) {
+export function ChatContainer({ initialAgent = 'General Physician' }: ChatContainerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeAgent, setActiveAgent] = useState(initialAgent);
   
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
@@ -33,10 +34,14 @@ export function ChatContainer({ onNewMessage }: ChatContainerProps) {
     }
   }, [user, isUserLoading, auth]);
 
+  useEffect(() => {
+    setActiveAgent(initialAgent);
+  }, [initialAgent]);
+
   const handleNewMessage = (message: ChatMessage) => {
     setMessages(prev => [...prev, message]);
-    if(onNewMessage) {
-        onNewMessage(message);
+    if (message.role === 'assistant' && typeof message.content === 'object' && message.content.specialty) {
+      setActiveAgent(message.content.specialty);
     }
   }
 
@@ -60,9 +65,9 @@ export function ChatContainer({ onNewMessage }: ChatContainerProps) {
     };
     handleNewMessage(userMessage);
 
-    const response = await getAIResponse(user.uid, { query: userQuery });
+    const response = await getAIResponse(user.uid, { query: userQuery, specialty: activeAgent });
 
-    if (!user.isAnonymous) {
+    if (!user.isAnonymous && response.isMedicalQuery) {
       logConsultation(firestore, {
         userId: user.uid,
         userQuery: userQuery,
@@ -98,7 +103,7 @@ export function ChatContainer({ onNewMessage }: ChatContainerProps) {
         <div className="absolute inset-0 overflow-y-auto" ref={scrollRef}>
             <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
             {messages.length === 0 && !isLoading ? (
-                <EmptyChat agent="General Physician" onQuery={handleExampleQuery} />
+                <EmptyChat agent={activeAgent} onQuery={handleExampleQuery} />
             ) : (
                 messages.map((message) => (
                    <ChatMessageComponent key={message.id} message={message} />

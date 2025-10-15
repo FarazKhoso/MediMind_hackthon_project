@@ -8,16 +8,15 @@ interface EmptyChatProps {
   agent?: string;
 }
 
-export function EmptyChat({ onQuery, agent }: EmptyChatProps) {
-  const examples = agent && agentExamples[agent] ? agentExamples[agent] : agentExamples.default;
+export function EmptyChat({ onQuery, agent = 'default' }: EmptyChatProps) {
+  const examples = agentExamples[agent] || agentExamples.default;
 
   return (
     <div className="flex h-full items-center justify-center">
       <div className="flex flex-col items-center text-center max-w-lg p-4">
         <Logo className="mb-6" />
+        <p className="text-muted-foreground mb-2 font-semibold text-lg">{examples.greeting}</p>
         <p className="text-muted-foreground mb-8">
-          {examples.greeting}
-          <br />
           Start a conversation by typing a query below or select an example.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
